@@ -291,12 +291,14 @@ public class HullCalculator : UdonSharpBehaviour
             //Triangles before vertices because of index
             int aboveWaterCornerCounter3rd = aboveWaterCornerCounter / 3;
 
+            /* -> Skip since not needed
             aboveWaterTriangleArea[aboveWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(highPoint, betweenPoint1, betweenPoint2);
             aboveWaterTriangleCenters[aboveWaterCornerCounter3rd] = (highPoint + betweenPoint1 + betweenPoint2) * 0.33333333333333333f;
             aboveWaterTriangleNormals[aboveWaterCornerCounter3rd] = CalculateTriangleNormal(highPoint, betweenPoint1, betweenPoint2);
             aboveWaterCorners[aboveWaterCornerCounter++] = highCorner;
             aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter;
             aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter + 1;
+            */
 
             int belowWaterCornerCounter3rd = belowWaterCornerCounter / 3;
             belowWaterTriangleArea[belowWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(lowPoint1, lowPoint2, betweenPoint2);
@@ -386,7 +388,8 @@ public class HullCalculator : UdonSharpBehaviour
             belowWaterCorners[belowWaterCornerCounter++] = lowCorner;
             belowWaterCorners[belowWaterCornerCounter++] = vertexCounter;
             belowWaterCorners[belowWaterCornerCounter++] = vertexCounter + 1;
-
+            
+            /* -> Skip since not needed
             aboveWaterTriangleArea[aboveWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(highPoint1, highPoint2, betweenPoint2);
             aboveWaterTriangleCenters[aboveWaterCornerCounter3rd] = (highPoint1 + highPoint2 + betweenPoint2) * 0.33333333333333333f;
             aboveWaterTriangleNormals[aboveWaterCornerCounter3rd] = CalculateTriangleNormal(highPoint1, highPoint2, betweenPoint2);
@@ -401,6 +404,7 @@ public class HullCalculator : UdonSharpBehaviour
             aboveWaterCorners[aboveWaterCornerCounter++] = highCorner1;
             aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter + 1;
             aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter;
+            */
 
             calculationVerticesGlobal[vertexCounter++] = betweenPoint1;
             calculationVerticesGlobal[vertexCounter++] = betweenPoint2;
