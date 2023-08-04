@@ -417,8 +417,6 @@ public class HullCalculator : UdonSharpBehaviour
     public float suctionDragCoefficientQuadratic = 1f;
     public float suctionFalloffPower = 1f;
 
-    public Vector3 totalPressureForce = Vector3.zero;
-
     public float frictionForceFactor = 1;
     public float pressureForceFactor = 1;
 
@@ -488,7 +486,7 @@ public class HullCalculator : UdonSharpBehaviour
 
                 Vector3 pressureForce = (pressureForceFactor * pressureSuctionDragForce * normal);
 
-                linkedRigidbody.AddForceAtPosition(forceMultiplier * totalPressureForce, center);
+                linkedRigidbody.AddForceAtPosition(forceMultiplier * pressureForce, center);
             }
         }
     }
