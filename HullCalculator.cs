@@ -41,6 +41,8 @@ public class HullCalculator : UdonSharpBehaviour
 
     public float timeMs;
 
+    public bool disablePhysics = true;
+
     //Physics
     float waterDensity = 1000f;
     float waterKinematicViscosity = 1000034;
@@ -59,9 +61,9 @@ public class HullCalculator : UdonSharpBehaviour
 
     Rigidbody linkedRigidbody;
 
-    public void Setup(Mesh hullMesh, Transform hullTransform, Rigidbody linkedRigidbody)
+    public void Setup(MeshFilter hullMeshFilter, Transform hullTransform, Rigidbody linkedRigidbody)
     {
-        this.hullMesh = hullMesh;
+        hullMesh = hullMeshFilter.mesh;
         this.hullTransform = hullTransform;
 
         hullVerticesLocal = hullMesh.vertices;
@@ -112,10 +114,34 @@ public class HullCalculator : UdonSharpBehaviour
             hullTriangleCenters[i / 3] = (hullVerticesLocal[hullCorners[i]] + hullVerticesLocal[hullCorners[i + 1]] + hullVerticesLocal[hullCorners[i + 2]]) * 0.33333333333333333f;
             hullTriangleNormals[i / 3] = CalculateTriangleNormal(hullVerticesLocal[hullCorners[i]], hullVerticesLocal[hullCorners[i + 1]], hullVerticesLocal[hullCorners[i + 2]]);
         }
+
+        Vector3 localBoundingBoxOfMesh = linkedRigidbody.transform.InverseTransformVector(hullMeshFilter.transform.TransformVector(hullMesh.bounds.size));
+
+        linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMesh, linkedRigidbody.mass);
+    }
+
+    float factor1over12 = 1f / 12f;
+
+    Vector3 CalculateInertiaTensorOfBox(Vector3 size, float mass)
+    {
+        Vector3 returnVector = Vector3.zero;
+
+        returnVector.x = Calculate2DInertiaOfRectangle(size.y, size.z, mass);
+        returnVector.y = Calculate2DInertiaOfRectangle(size.x, size.z, mass);
+        returnVector.z = Calculate2DInertiaOfRectangle(size.x, size.y, mass);
+
+        return returnVector;
+    }
+
+    float Calculate2DInertiaOfRectangle(float a, float b, float mass)
+    {
+        return factor1over12 * mass * (a * a + b * b);
     }
 
     private void FixedUpdate()
     {
+        if (disablePhysics) return;
+
         GenerateCalculationMeshes();
 
         CalculateAndAddForcesToRigidbody(1);
