@@ -1,5 +1,4 @@
 ﻿
-using Newtonsoft.Json.Linq;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -11,13 +10,19 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] StationManager DriverStation;
 
     [SerializeField] MeshFilter BaseMesh;
-    [SerializeField] MeshFilter AboveWaterMesh;
-    [SerializeField] MeshFilter UnderwaterMesh;
-    [SerializeField] HullCalculator generator;
+    [SerializeField] HullCalculator linkedHullCalculator;
     [SerializeField] Rigidbody LinkedRigidbody;
     [SerializeField] Transform Thruster;
     [SerializeField] Transform Model;
     
+    public HullCalculator LinkedHullCalculator
+    {
+        get
+        {
+            return linkedHullCalculator;
+        }
+    }
+
     bool active = false;
 
     // Start is called before the first frame update
@@ -25,7 +30,7 @@ public class BoatController : UdonSharpBehaviour
     {
         Debug.Log($"Vertices count = {BaseMesh.mesh.vertexCount}");
 
-        generator.Setup(BaseMesh, BaseMesh.transform, LinkedRigidbody);
+        linkedHullCalculator.Setup(BaseMesh, BaseMesh.transform, LinkedRigidbody);
     }
 
     public float calculationTimeMs = 0;
@@ -104,7 +109,7 @@ public class BoatController : UdonSharpBehaviour
         
         active = true;
 
-        generator.disablePhysics = false;
+        linkedHullCalculator.disablePhysics = false;
         LinkedRigidbody.useGravity = true;
     }
 
@@ -112,7 +117,7 @@ public class BoatController : UdonSharpBehaviour
     {
         active = false;
 
-        generator.disablePhysics = true;
+        linkedHullCalculator.disablePhysics = true;
         LinkedRigidbody.useGravity = false;
         LinkedRigidbody.velocity = Vector3.zero;
         LinkedRigidbody.angularVelocity = Vector3.zero;
