@@ -1,8 +1,10 @@
 ﻿
+using Newtonsoft.Json.Linq;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
+using VRC.Udon.Common;
 
 public class BoatController : UdonSharpBehaviour
 {
@@ -14,16 +16,16 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] HullCalculator generator;
     [SerializeField] Rigidbody LinkedRigidbody;
     [SerializeField] Transform Thruster;
+    [SerializeField] Transform Model;
     
+    bool active = false;
+
     // Start is called before the first frame update
     void Start()
     {
         Debug.Log($"Vertices count = {BaseMesh.mesh.vertexCount}");
 
-        UnderwaterMesh.mesh = new Mesh();
-        AboveWaterMesh.mesh = new Mesh();
-
-        generator.Setup(BaseMesh.mesh, BaseMesh.transform, LinkedRigidbody);
+        generator.Setup(BaseMesh, BaseMesh.transform, LinkedRigidbody);
     }
 
     public float calculationTimeMs = 0;
@@ -32,26 +34,16 @@ public class BoatController : UdonSharpBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (DriverStation.inStation)
+        Model.SetPositionAndRotation(transform.position, transform.rotation);
+
+        if (active)
         {
-            float target = 0;
-
-            if (Input.GetKey(KeyCode.A))
-            {
-                target = maxDeflectionAngle;
-            }
-            if (Input.GetKey(KeyCode.D))
-            {
-                target = -maxDeflectionAngle;
-
-            }
+            float target = -steeringInput * maxDeflectionAngle;
 
             currentHorizontalSteeringAngle = Mathf.MoveTowards(currentHorizontalSteeringAngle, target, horizontalSteeringSpeed * Time.deltaTime);
 
             Thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
         }
-
-            
 
         /*
         AboveWaterMesh.mesh.triangles = new int[0];
@@ -68,6 +60,17 @@ public class BoatController : UdonSharpBehaviour
         */
     }
 
+    private void FixedUpdate()
+    {
+        if (active)
+        {
+            LinkedRigidbody.AddForceAtPosition(Thruster.forward * throttleInput * force, Thruster.position);
+        }
+    }
+
+    float throttleInput = 0;
+    float steeringInput = 0;
+
     public float force = 10000;
     public float velocity = 0;
 
@@ -81,16 +84,37 @@ public class BoatController : UdonSharpBehaviour
 
     public int iteration = 2;
 
-    private void FixedUpdate()
+    public override void InputMoveHorizontal(float value, UdonInputEventArgs args)
     {
-        if (DriverStation.inStation)
-        {
-            if (Input.GetKey(KeyCode.W))
-            {
-                LinkedRigidbody.AddForceAtPosition(Thruster.forward * force, Thruster.position);
-            }
-        }
+        if(!active) return;
 
-        velocity = LinkedRigidbody.velocity.magnitude;
+        steeringInput = value;
+    }
+
+    public override void InputMoveVertical(float value, UdonInputEventArgs args)
+    {
+        if(!active) return;
+
+        throttleInput = value;
+    }
+
+    public void LocalPlayerEntered()
+    {
+        if (!Networking.IsOwner(gameObject)) Networking.SetOwner(Networking.LocalPlayer, gameObject);
+        
+        active = true;
+
+        generator.disablePhysics = false;
+        LinkedRigidbody.useGravity = true;
+    }
+
+    public void LocalPlayerExited()
+    {
+        active = false;
+
+        generator.disablePhysics = true;
+        LinkedRigidbody.useGravity = false;
+        LinkedRigidbody.velocity = Vector3.zero;
+        LinkedRigidbody.angularVelocity = Vector3.zero;
     }
 }
