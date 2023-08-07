@@ -7,7 +7,7 @@ using VRC.Udon;
 [DefaultExecutionOrder(100)]
 public class BoatAnalyzer : UdonSharpBehaviour
 {
-    [SerializeField] BoatController LinkedBoatController;
+    [SerializeField] BoatController linkedBoatController;
     float belowSurfaceDistance = 50;
 
     void Start()
@@ -24,11 +24,11 @@ public class BoatAnalyzer : UdonSharpBehaviour
 
     void CalculateFullDisplacementMass()
     {
-        Vector3 originalPosition = LinkedBoatController.transform.position;
+        Vector3 originalPosition = linkedBoatController.transform.position;
 
-        LinkedBoatController.transform.position = belowSurfaceDistance * Vector3.down;
+        linkedBoatController.transform.position = belowSurfaceDistance * Vector3.down;
 
-        HullCalculator calculator = LinkedBoatController.LinkedHullCalculator;
+        HullCalculator calculator = linkedBoatController.LinkedHullCalculator;
 
         calculator.GenerateCalculationMeshes();
 
@@ -38,6 +38,6 @@ public class BoatAnalyzer : UdonSharpBehaviour
 
         Debug.Log($"Buoyancy force when completely submerged at {belowSurfaceDistance}m = {calculator.totalBuoyancyForce.magnitude.ToString("G30")}");
 
-        LinkedBoatController.transform.position = originalPosition;
+        linkedBoatController.transform.position = originalPosition;
     }
 }

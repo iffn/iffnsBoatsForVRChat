@@ -7,13 +7,13 @@ using VRC.Udon.Common;
 
 public class BoatController : UdonSharpBehaviour
 {
-    [SerializeField] StationManager DriverStation;
+    [SerializeField] StationManager driverStation;
 
-    [SerializeField] MeshFilter BaseMesh;
+    [SerializeField] MeshFilter baseMesh;
     [SerializeField] HullCalculator linkedHullCalculator;
-    [SerializeField] Rigidbody LinkedRigidbody;
-    [SerializeField] Transform Thruster;
-    [SerializeField] Transform Model;
+    [SerializeField] Rigidbody linkedRigidbody;
+    [SerializeField] Transform thruster;
+    [SerializeField] Transform modelHolder;
     
     public HullCalculator LinkedHullCalculator
     {
@@ -28,9 +28,9 @@ public class BoatController : UdonSharpBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log($"Vertices count = {BaseMesh.mesh.vertexCount}");
+        Debug.Log($"Vertices count = {baseMesh.mesh.vertexCount}");
 
-        linkedHullCalculator.Setup(BaseMesh, BaseMesh.transform, LinkedRigidbody);
+        linkedHullCalculator.Setup(baseMesh, baseMesh.transform, linkedRigidbody);
     }
 
     public float calculationTimeMs = 0;
@@ -39,7 +39,7 @@ public class BoatController : UdonSharpBehaviour
     // Update is called once per frame
     void Update()
     {
-        Model.SetPositionAndRotation(transform.position, transform.rotation);
+        modelHolder.SetPositionAndRotation(transform.position, transform.rotation);
 
         if (active)
         {
@@ -47,7 +47,7 @@ public class BoatController : UdonSharpBehaviour
 
             currentHorizontalSteeringAngle = Mathf.MoveTowards(currentHorizontalSteeringAngle, target, horizontalSteeringSpeed * Time.deltaTime);
 
-            Thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
+            thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
         }
 
         /*
@@ -69,7 +69,7 @@ public class BoatController : UdonSharpBehaviour
     {
         if (active)
         {
-            LinkedRigidbody.AddForceAtPosition(Thruster.forward * throttleInput * force, Thruster.position);
+            linkedRigidbody.AddForceAtPosition(thruster.forward * throttleInput * force, thruster.position);
         }
     }
 
@@ -110,7 +110,7 @@ public class BoatController : UdonSharpBehaviour
         active = true;
 
         linkedHullCalculator.disablePhysics = false;
-        LinkedRigidbody.useGravity = true;
+        linkedRigidbody.useGravity = true;
     }
 
     public void LocalPlayerExited()
@@ -118,8 +118,8 @@ public class BoatController : UdonSharpBehaviour
         active = false;
 
         linkedHullCalculator.disablePhysics = true;
-        LinkedRigidbody.useGravity = false;
-        LinkedRigidbody.velocity = Vector3.zero;
-        LinkedRigidbody.angularVelocity = Vector3.zero;
+        linkedRigidbody.useGravity = false;
+        linkedRigidbody.velocity = Vector3.zero;
+        linkedRigidbody.angularVelocity = Vector3.zero;
     }
 }

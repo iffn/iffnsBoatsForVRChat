@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: BoatController
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 3c4762b17e609c048880603c8bf23bae,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 9819232a3f844d64eb8076da0bd2397c,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -50,13 +50,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: DriverStation
+      Data: driverStation
     - Name: $v
       Entry: 7
       Data: 2|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: DriverStation
+      Data: driverStation
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 3|System.RuntimeType, mscorlib
@@ -116,13 +116,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: BaseMesh
+      Data: baseMesh
     - Name: $v
       Entry: 7
       Data: 7|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: BaseMesh
+      Data: baseMesh
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 8|System.RuntimeType, mscorlib
@@ -236,13 +236,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: LinkedRigidbody
+      Data: linkedRigidbody
     - Name: $v
       Entry: 7
       Data: 15|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: LinkedRigidbody
+      Data: linkedRigidbody
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 16|System.RuntimeType, mscorlib
@@ -296,13 +296,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: Thruster
+      Data: thruster
     - Name: $v
       Entry: 7
       Data: 19|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: Thruster
+      Data: thruster
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 20|System.RuntimeType, mscorlib
@@ -356,13 +356,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: Model
+      Data: modelHolder
     - Name: $v
       Entry: 7
       Data: 23|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: Model
+      Data: modelHolder
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 20

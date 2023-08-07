@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: StationManager
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: f582dc6e7909e4f46929aafd30035c42,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 8e5cf8d6fe0651c428a463a8689e97ac,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -110,13 +110,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: HeadXOffset
+      Data: headXOffset
     - Name: $v
       Entry: 7
       Data: 6|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: HeadXOffset
+      Data: headXOffset
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 7|System.RuntimeType, mscorlib
@@ -284,13 +284,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: <localPlayerInStation>k__BackingField
+      Data: <LocalPlayerInStation>k__BackingField
     - Name: $v
       Entry: 7
       Data: 17|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: <localPlayerInStation>k__BackingField
+      Data: <LocalPlayerInStation>k__BackingField
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 18|System.RuntimeType, mscorlib
@@ -392,13 +392,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: EntryAndExitInformants
+      Data: entryAndExitInformants
     - Name: $v
       Entry: 7
       Data: 23|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: EntryAndExitInformants
+      Data: entryAndExitInformants
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 24|System.RuntimeType, mscorlib

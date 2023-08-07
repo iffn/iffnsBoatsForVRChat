@@ -11,13 +11,13 @@ public class StationManager : UdonSharpBehaviour
 {
     [UdonSynced] Vector3 syncedPlayerPosition;
 
-    [SerializeField] float HeadXOffset = 0.25f;
+    [SerializeField] float headXOffset = 0.25f;
     public VRCStation LinkedStation { get; private set; }
     public VRCPlayerApi SeatedPlayer { get; private set; }
-    public bool localPlayerInStation { get; private set; } = false;
+    public bool LocalPlayerInStation { get; private set; } = false;
     Collider linkedCollider;
 
-    [SerializeField] UdonSharpBehaviour[] EntryAndExitInformants;
+    [SerializeField] UdonSharpBehaviour[] entryAndExitInformants;
 
     float transitionSpeed = 0.2f;
 
@@ -44,7 +44,6 @@ public class StationManager : UdonSharpBehaviour
 
         linkedCollider = transform.GetComponent<Collider>();
     }
-
 
     public override void Interact()
     {
@@ -80,15 +79,15 @@ public class StationManager : UdonSharpBehaviour
         float xOffset = 0;
         if (headHeading > 45 && headHeading < 180)
         {
-            xOffset = Remap(iMin: 45, iMax: 90, oMin: 0, oMax: HeadXOffset, iValue: headHeading);
+            xOffset = Remap(iMin: 45, iMax: 90, oMin: 0, oMax: headXOffset, iValue: headHeading);
         }
         else if (headHeading < 315 && headHeading > 180)
         {
-            xOffset = -Remap(iMin: 315, iMax: 270, oMin: 0, oMax: HeadXOffset, iValue: headHeading);
+            xOffset = -Remap(iMin: 315, iMax: 270, oMin: 0, oMax: headXOffset, iValue: headHeading);
         }
 
         //Destktop movement stuff
-        if (localPlayerInStation)
+        if (LocalPlayerInStation)
         {
             bool sync = false;
 
@@ -172,7 +171,7 @@ public class StationManager : UdonSharpBehaviour
 
     public override void InputJump(bool value, UdonInputEventArgs args)
     {
-        if (value && localPlayerInStation && LinkedStation.disableStationExit)
+        if (value && LocalPlayerInStation && LinkedStation.disableStationExit)
         {
             LinkedStation.ExitStation(Networking.LocalPlayer);
         }
@@ -186,18 +185,18 @@ public class StationManager : UdonSharpBehaviour
         {
             linkedCollider.enabled = false;
 
-            localPlayerInStation = true;
+            LocalPlayerInStation = true;
 
             Networking.SetOwner(player, gameObject);
 
-            foreach (UdonSharpBehaviour behavior in EntryAndExitInformants)
+            foreach (UdonSharpBehaviour behavior in entryAndExitInformants)
             {
                 behavior.SendCustomEvent("LocalPlayerEntered");
             }
         }
         else
         {
-            foreach(UdonSharpBehaviour behavior in EntryAndExitInformants)
+            foreach(UdonSharpBehaviour behavior in entryAndExitInformants)
             {
                 behavior.SendCustomEvent("RemotePlayerEntered");
             }
@@ -212,9 +211,9 @@ public class StationManager : UdonSharpBehaviour
         {
             linkedCollider.enabled = true;
 
-            localPlayerInStation = false;
+            LocalPlayerInStation = false;
 
-            foreach (UdonSharpBehaviour behavior in EntryAndExitInformants)
+            foreach (UdonSharpBehaviour behavior in entryAndExitInformants)
             {
                 behavior.SendCustomEvent("LocalPlayerExited");
             }
@@ -223,7 +222,7 @@ public class StationManager : UdonSharpBehaviour
         {
             ResetStationPosition();
 
-            foreach (UdonSharpBehaviour behavior in EntryAndExitInformants)
+            foreach (UdonSharpBehaviour behavior in entryAndExitInformants)
             {
                 behavior.SendCustomEvent("RemotePlayerExited");
             }
