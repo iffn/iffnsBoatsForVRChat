@@ -515,9 +515,9 @@ public class HullCalculator : UdonSharpBehaviour
         // b = Distance between A and C [m]
         // gamma = angle at point C [rad]
 
-        float a = Vector3.Distance(A, B);
-        float c = Vector3.Distance(C, A);
+        float a = Vector3.Distance(C, B);
+        float b = Vector3.Distance(C, A);
         float gamma = Vector3.Angle(A - C, B - C) * Mathf.Deg2Rad;
-        return 0.5f * a * c * Mathf.Sin(gamma);
+        return 0.5f * a * b * Mathf.Sin(gamma);
     }
 }
