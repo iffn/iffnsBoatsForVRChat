@@ -34,6 +34,12 @@ public class HullCalculator : UdonSharpBehaviour
     public Vector3[] frictionDragForces = new Vector3[0];
     public Vector3[] pressureForces = new Vector3[0];
 
+    public Vector3 totalPressureForce = Vector3.zero;
+    public Vector3 totalPressureTorque = Vector3.zero;
+    public Vector3 totalFrictionDragForce = Vector3.zero;
+    public Vector3 totalFrictionDragTorque = Vector3.zero;
+    public Vector3 totalBuoyancyForce = Vector3.zero;
+    public Vector3 totalBuoyancyTorque = Vector3.zero;
 
     int[] oneAboveTheWaterTriangles = new int[0];
     int[] twoAboveTheWaterTriangles = new int[0];
@@ -413,8 +419,6 @@ public class HullCalculator : UdonSharpBehaviour
     public float suctionDragCoefficientQuadratic = 1f;
     public float suctionFalloffPower = 1f;
 
-    public Vector3 totalPressureForce = Vector3.zero;
-
     public float frictionForceFactor = 1;
     public float pressureForceFactor = 1;
 
@@ -486,6 +490,94 @@ public class HullCalculator : UdonSharpBehaviour
 
                 linkedRigidbody.AddForceAtPosition(forceMultiplier * totalPressureForce, center);
             }
+        }
+    }
+
+    public void CalculateForcesAndSaveToArray(Vector3 boatVelocity, Vector3 angularVelocity)
+    {
+        int belowWaterTriangles = belowWaterCornerCounter / 3;
+
+        Vector3 movementCenter = linkedRigidbody.worldCenterOfMass;
+        Vector3 linearVelocityOfCenter = boatVelocity;
+        Vector3 angularVelocityOfCenter = angularVelocity;
+
+        Vector3 negativeBoatVelocityDirection = -linearVelocityOfCenter.normalized;
+        float reynoldsNumber = linearVelocityOfCenter.magnitude * boatLength / waterKinematicViscosity;
+        float frictionCoefficientDividerPart = (Mathf.Log10(reynoldsNumber) - 2);
+        float frictionalDragCoefficient = 0.075f / (frictionCoefficientDividerPart * frictionCoefficientDividerPart);
+
+        for (int i = 0; i < belowWaterTriangles; i++)
+        {
+            //General data
+            Vector3 center = belowWaterTriangleCenters[i];
+            Vector3 normal = belowWaterTriangleNormals[i];
+            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
+            float velocityMagnitude = velocity.magnitude;
+            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
+            float area = belowWaterTriangleArea[i];
+
+            //Buoyancy
+            Vector3 buoyancyForce = waterDensity * gravity * GetDistanceToWater(center) * area * normal;
+            buoyancyForce.x = 0;
+            buoyancyForce.z = 0;
+
+            buoyancyForces[i] = buoyancyForce;
+
+            //Friction drag force
+            float frictionDragForceMagnitude = 0.5f * waterDensity * belowWaterTriangleArea[i] * frictionalDragCoefficient * velocityMagnitude * velocityMagnitude * Mathf.Sin(angleBetweenVelocityAndFaceNormal);
+            Vector3 frictionDragForce = frictionForceFactor * frictionDragForceMagnitude * negativeBoatVelocityDirection;
+            frictionDragForces[i] = frictionDragForce;
+
+            //Pressure and suction drag force
+            if (angleBetweenVelocityAndFaceNormal != 0)
+            {
+                float pressureSuctionDragForce;
+
+                if (angleBetweenVelocityAndFaceNormal > 0)
+                {
+                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * suctionFalloffPower;
+                }
+                else
+                {
+                    pressureSuctionDragForce = -(suctionDragCoefficientLinear * velocityMagnitude + suctionDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * suctionFalloffPower;
+                }
+
+                Vector3 pressureForce = (pressureForceFactor * pressureSuctionDragForce * normal);
+
+                pressureForces[i] = pressureForce;
+            }
+            else
+            {
+                pressureForces[i] = Vector3.zero;
+            }
+        }
+    }
+
+    public void SumUpDForces()
+    {
+        totalBuoyancyForce = Vector3.zero;
+        totalBuoyancyTorque = Vector3.zero;
+        totalPressureForce = Vector3.zero;
+        totalPressureTorque = Vector3.zero;
+        totalFrictionDragForce = Vector3.zero;
+        totalFrictionDragTorque = Vector3.zero;
+
+        int triangles = belowWaterCornerCounter / 3;
+
+        for (int i = 0; i < triangles; i++)
+        {
+            Vector3 currentBuoyancyForce = buoyancyForces[i];
+            Vector3 currentFrictionDragForce = frictionDragForces[i];
+            Vector3 currentPressureForce = pressureForces[i];
+
+            totalBuoyancyForce += currentBuoyancyForce;
+            totalBuoyancyTorque += Vector3.Cross(belowWaterTriangleCenters[i], currentBuoyancyForce);
+
+            totalPressureForce += currentPressureForce;
+            totalPressureTorque += Vector3.Cross(belowWaterTriangleCenters[i], currentPressureForce);
+
+            totalFrictionDragForce += currentFrictionDragForce;
+            totalFrictionDragTorque += Vector3.Cross(belowWaterTriangleCenters[i], currentFrictionDragForce);
         }
     }
 
