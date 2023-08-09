@@ -41,7 +41,7 @@ public class BoatController : UdonSharpBehaviour
         originalLinearDrag = linkedRigidbody.drag;
         originalAngularDrag = linkedRigidbody.angularDrag;
 
-        StationaryMode = true;
+        Active = false;
     }
 
     public void StopRigidbody()
@@ -52,11 +52,20 @@ public class BoatController : UdonSharpBehaviour
         modelHolder.SetPositionAndRotation(transform.position, transform.rotation);
     }
 
-    bool StationaryMode
+    bool Active
     {
         set
         {
+            active = value;
+
             if (value)
+            {
+                modelHolder.parent = transform;
+
+                linkedRigidbody.drag = originalLinearDrag;
+                linkedRigidbody.angularDrag = originalAngularDrag;
+            }
+            else
             {
                 modelHolder.SetPositionAndRotation(transform.position, transform.rotation);
                 modelHolder.parent = transform.parent;
@@ -69,25 +78,16 @@ public class BoatController : UdonSharpBehaviour
                 SendCustomEventDelayedFrames(nameof(StopRigidbody), 1, VRC.Udon.Common.Enums.EventTiming.LateUpdate);
                 SendCustomEventDelayedFrames(nameof(StopRigidbody), 2, VRC.Udon.Common.Enums.EventTiming.LateUpdate);
             }
-            else
-            {
-                modelHolder.parent = transform;
 
-                linkedRigidbody.drag = originalLinearDrag;
-                linkedRigidbody.angularDrag = originalAngularDrag;
-            }
+            linkedHullCalculator.disablePhysics = !value;
+            linkedRigidbody.useGravity = value;
 
-            active = !value;
-
-            linkedHullCalculator.disablePhysics = value;
-            linkedRigidbody.useGravity = !value;
-
-            foreach (Collider collider in stationaryColliders)
+            foreach (Collider collider in movingColliders)
             {
                 collider.enabled = value;
             }
 
-            foreach (Collider collider in movingColliders)
+            foreach (Collider collider in stationaryColliders)
             {
                 collider.enabled = !value;
             }
@@ -166,15 +166,11 @@ public class BoatController : UdonSharpBehaviour
     {
         if (!Networking.IsOwner(gameObject)) Networking.SetOwner(Networking.LocalPlayer, gameObject);
 
-        StationaryMode = false;
+        Active = true;
     }
 
     public void LocalPlayerExited()
     {
-        active = false;
-
-        
-
-        StationaryMode = true;
+        Active = false;
     }
 }
