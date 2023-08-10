@@ -108,20 +108,6 @@ public class BoatController : UdonSharpBehaviour
 
             thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
         }
-
-        /*
-        AboveWaterMesh.mesh.triangles = new int[0];
-        AboveWaterMesh.mesh.vertices = generator.calculationVerticesGlobal;
-        AboveWaterMesh.mesh.triangles = generator.aboveWaterCorners;
-        AboveWaterMesh.mesh.RecalculateNormals();
-        AboveWaterMesh.mesh.RecalculateBounds();
-
-        UnderwaterMesh.mesh.triangles = new int[0];
-        UnderwaterMesh.mesh.vertices = generator.calculationVerticesGlobal;
-        UnderwaterMesh.mesh.triangles = generator.belowWaterCorners;
-        UnderwaterMesh.mesh.RecalculateNormals();
-        UnderwaterMesh.mesh.RecalculateBounds();
-        */
     }
 
     private void FixedUpdate()
@@ -138,7 +124,7 @@ public class BoatController : UdonSharpBehaviour
     public float force = 10000;
     public float velocity = 0;
 
-    public float horizontalSteeringSpeed = 1;
+    public float horizontalSteeringSpeed = 30;
 
     public float currentHorizontalSteeringAngle = 0;
 
