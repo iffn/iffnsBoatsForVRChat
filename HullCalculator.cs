@@ -1,4 +1,5 @@
 ﻿//#define applyForces
+//#define sumUpForcesWhileDriving
 
 using System;
 using UdonSharp;
@@ -151,6 +152,8 @@ public class HullCalculator : UdonSharpBehaviour
         GenerateCalculationMeshes();
 
         CalculateAndAddForcesToRigidbody(1);
+
+        SumUpDForces();
     }
 
     public void GenerateCalculationMeshes()
@@ -556,7 +559,9 @@ public class HullCalculator : UdonSharpBehaviour
             Vector3 buoyancyForce = waterDensity * gravity * GetDistanceToWater(center) * area * normal;
             buoyancyForce.x = 0;
             buoyancyForce.z = 0;
-
+#if sumUpForcesWhileDriving
+            buoyancyForces[i] = buoyancyForce;
+#endif
             linkedRigidbody.AddForceAtPosition(forceMultiplier * buoyancyForce, belowWaterTriangleCenters[i]);
 
 
@@ -564,6 +569,10 @@ public class HullCalculator : UdonSharpBehaviour
             float frictionDragForceMagnitude = 0.5f * waterDensity * belowWaterTriangleArea[i] * frictionalDragCoefficient * velocityMagnitude * velocityMagnitude * Mathf.Sin(angleBetweenVelocityAndFaceNormal);
             Vector3 frictionDragForce = frictionForceFactor * frictionDragForceMagnitude * negativeBoatVelocityDirection;
             linkedRigidbody.AddForceAtPosition(forceMultiplier * frictionDragForce, center);
+
+#if sumUpForcesWhileDriving
+            frictionDragForces[i] = frictionDragForce;
+#endif
 
             //Pressure and suction drag force
             if (angleBetweenVelocityAndFaceNormal != 0)
@@ -582,6 +591,14 @@ public class HullCalculator : UdonSharpBehaviour
                 Vector3 pressureForce = (pressureForceFactor * pressureSuctionDragForce * normal);
 
                 linkedRigidbody.AddForceAtPosition(forceMultiplier * pressureForce, center);
+
+#if sumUpForcesWhileDriving
+                pressureForces[i] = pressureForce;
+#endif
+            }
+            else
+            {
+
             }
         }
     }
