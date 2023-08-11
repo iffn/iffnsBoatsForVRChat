@@ -59,14 +59,27 @@ public class HullCalculator : UdonSharpBehaviour
 
     public float[] times = new float[20];
 
+    float factor1over12 = 1f / 12f;
+    
+    public string state = "";
+
+    Rigidbody linkedRigidbody;
+
+    public float pressureDragCoefficientLinear = 1f;
+    public float pressureDragCoefficientQuadratic = 1f;
+    public float suctionDragCoefficientLinear = 1f;
+    public float suctionDragCoefficientQuadratic = 1f;
+    public float suctionFalloffPower = 1f;
+
+    public float frictionForceFactor = 1;
+    public float pressureForceFactor = 1;
+
+    public float anglePressureDragForceVelocity;
+
     void Start()
     {
         //Use setup instead
     }
-
-    public string state = "";
-
-    Rigidbody linkedRigidbody;
 
     public void Setup(MeshFilter hullMeshFilter, Transform hullTransform, Rigidbody linkedRigidbody)
     {
@@ -126,8 +139,6 @@ public class HullCalculator : UdonSharpBehaviour
 
         linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMesh, linkedRigidbody.mass);
     }
-
-    float factor1over12 = 1f / 12f;
 
     Vector3 CalculateInertiaTensorOfBox(Vector3 size, float mass)
     {
@@ -419,18 +430,6 @@ public class HullCalculator : UdonSharpBehaviour
             calculationVerticesGlobal[vertexCounter++] = betweenPoint2;
         }
     }
-
-    public float pressureDragCoefficientLinear = 1f;
-    public float pressureDragCoefficientQuadratic = 1f;
-    public float suctionDragCoefficientLinear = 1f;
-    public float suctionDragCoefficientQuadratic = 1f;
-    public float suctionFalloffPower = 1f;
-
-    public float frictionForceFactor = 1;
-    public float pressureForceFactor = 1;
-
-    public float anglePressureDragForceVelocity;
-
 
     public void AddPreviousForces(Rigidbody rb)
     {

@@ -17,7 +17,7 @@ public class BoatController : UdonSharpBehaviour
 
     [SerializeField] Collider[] stationaryColliders;
 
-    MeshCollider movingCollider;
+    Collider movingCollider;
 
     public HullCalculator LinkedHullCalculator
     {
@@ -37,13 +37,13 @@ public class BoatController : UdonSharpBehaviour
     {
         Debug.Log($"Vertices count = {calculationMesh.mesh.vertexCount}");
 
-        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody);
+        movingCollider = calculationMesh.transform.GetComponent<Collider>();
         
         calculationMesh.transform.parent = transform;
 
         Debug.Log(calculationMesh.transform.parent.name);
 
-        movingCollider = calculationMesh.transform.GetComponent <MeshCollider>();
+        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody);
 
         originalLinearDrag = linkedRigidbody.drag;
         originalAngularDrag = linkedRigidbody.angularDrag;
