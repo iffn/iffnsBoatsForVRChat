@@ -69,6 +69,7 @@ public class HullCalculator : UdonSharpBehaviour
     public float pressureDragCoefficientQuadratic = 1f;
     public float suctionDragCoefficientLinear = 1f;
     public float suctionDragCoefficientQuadratic = 1f;
+    public float pressureFalloffPower = 1f;
     public float suctionFalloffPower = 1f;
 
     public float frictionForceFactor = 1;
@@ -483,7 +484,7 @@ public class HullCalculator : UdonSharpBehaviour
 
                 if (angleBetweenVelocityAndFaceNormal > 0)
                 {
-                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * suctionFalloffPower;
+                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * pressureFalloffPower;
                 }
                 else
                 {
@@ -580,7 +581,7 @@ public class HullCalculator : UdonSharpBehaviour
 
                 if (angleBetweenVelocityAndFaceNormal > 0)
                 {
-                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * suctionFalloffPower;
+                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * pressureFalloffPower;
                 }
                 else
                 {

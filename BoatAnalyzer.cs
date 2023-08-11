@@ -10,7 +10,23 @@ public class BoatAnalyzer : UdonSharpBehaviour
     [SerializeField] BoatController linkedBoatController;
     float belowSurfaceDistance = 50;
 
+    //Original data
+    Vector3 originalPosition;
+    Vector3 currentVelocity;
+
     void Start()
+    {
+        CheckFullySubmergeDrag();
+    }
+
+    void CheckFullySubmergeDrag()
+    {
+        CalculateFullySubmergedDrag(10 * Vector3.forward);
+        CalculateFullySubmergedDrag(20 * Vector3.forward);
+        CalculateFullySubmergedDrag(30 * Vector3.forward);
+    }
+
+    void CheckForContinuousDisplacementMass()
     {
         belowSurfaceDistance = 5;
         CalculateFullDisplacementMass();
@@ -22,9 +38,37 @@ public class BoatAnalyzer : UdonSharpBehaviour
         CalculateFullDisplacementMass();
     }
 
+    void SaveCurrentData()
+    {
+        originalPosition = linkedBoatController.transform.position;
+    }
+
+    void RestoreData()
+    {
+        linkedBoatController.transform.position = originalPosition;
+    }
+
+    void CalculateFullySubmergedDrag(Vector3 velocity)
+    {
+        SaveCurrentData();
+
+        linkedBoatController.transform.position = belowSurfaceDistance * Vector3.down;
+        HullCalculator calculator = linkedBoatController.LinkedHullCalculator;
+
+        calculator.GenerateCalculationMeshes();
+
+        calculator.CalculateForcesAndSaveToArray(velocity, Vector3.zero);
+
+        calculator.SumUpDForces();
+
+        Debug.Log($"Drag force when completely submerged at {velocity.magnitude}m/s = {(calculator.totalFrictionDragForce + calculator.totalPressureForce)}"); //.magnitude.ToString("G30")}");
+
+        RestoreData();
+    }
+
     void CalculateFullDisplacementMass()
     {
-        Vector3 originalPosition = linkedBoatController.transform.position;
+        SaveCurrentData();
 
         linkedBoatController.transform.position = belowSurfaceDistance * Vector3.down;
 
@@ -37,7 +81,7 @@ public class BoatAnalyzer : UdonSharpBehaviour
         calculator.SumUpDForces();
 
         Debug.Log($"Buoyancy force when completely submerged at {belowSurfaceDistance}m = {calculator.totalBuoyancyForce.magnitude.ToString("G30")}");
-
-        linkedBoatController.transform.position = originalPosition;
+        
+        RestoreData();
     }
 }

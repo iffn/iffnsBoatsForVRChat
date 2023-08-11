@@ -44,7 +44,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 46
+      Data: 47
     - Name: 
       Entry: 7
       Data: 
@@ -2132,13 +2132,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: suctionFalloffPower
+      Data: pressureFalloffPower
     - Name: $v
       Entry: 7
       Data: 97|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: suctionFalloffPower
+      Data: pressureFalloffPower
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 66
@@ -2180,13 +2180,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: frictionForceFactor
+      Data: suctionFalloffPower
     - Name: $v
       Entry: 7
       Data: 99|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: frictionForceFactor
+      Data: suctionFalloffPower
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 66
@@ -2229,13 +2229,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: pressureForceFactor
+      Data: frictionForceFactor
     - Name: $v
       Entry: 7
       Data: 101|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: pressureForceFactor
+      Data: frictionForceFactor
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 66
@@ -2278,10 +2278,59 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: anglePressureDragForceVelocity
+      Data: pressureForceFactor
     - Name: $v
       Entry: 7
       Data: 103|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
+    - Name: <Name>k__BackingField
+      Entry: 1
+      Data: pressureForceFactor
+    - Name: <UserType>k__BackingField
+      Entry: 9
+      Data: 66
+    - Name: <SystemType>k__BackingField
+      Entry: 9
+      Data: 66
+    - Name: <SyncMode>k__BackingField
+      Entry: 7
+      Data: System.Nullable`1[[UdonSharp.UdonSyncMode, UdonSharp.Runtime]], mscorlib
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: <IsSerialized>k__BackingField
+      Entry: 5
+      Data: true
+    - Name: _fieldAttributes
+      Entry: 7
+      Data: 104|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: anglePressureDragForceVelocity
+    - Name: $v
+      Entry: 7
+      Data: 105|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
       Data: anglePressureDragForceVelocity
@@ -2305,7 +2354,7 @@ MonoBehaviour:
       Data: true
     - Name: _fieldAttributes
       Entry: 7
-      Data: 104|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+      Data: 106|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
         mscorlib
     - Name: 
       Entry: 12
