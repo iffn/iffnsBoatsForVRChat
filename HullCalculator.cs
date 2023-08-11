@@ -598,7 +598,9 @@ public class HullCalculator : UdonSharpBehaviour
             }
             else
             {
-
+#if sumUpForcesWhileDriving
+                pressureForces[i] = Vector3.zero;
+#endif
             }
         }
     }
