@@ -460,9 +460,6 @@ public class HullCalculator : UdonSharpBehaviour
             //General data
             Vector3 center = belowWaterTriangleCenters[i];
             Vector3 normal = belowWaterTriangleNormals[i];
-            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
-            float velocityMagnitude = velocity.magnitude;
-            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
             float area = belowWaterTriangleArea[i];
 
             //Buoyancy
@@ -471,6 +468,11 @@ public class HullCalculator : UdonSharpBehaviour
             buoyancyForce.z = 0;
 
             buoyancyForces[i] = buoyancyForce;
+
+            continue;
+            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
+            float velocityMagnitude = velocity.magnitude;
+            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
 
             //Friction drag force
             float frictionDragForceMagnitude = 0.5f * waterDensity * belowWaterTriangleArea[i] * frictionalDragCoefficient * velocityMagnitude * velocityMagnitude * Mathf.Sin(angleBetweenVelocityAndFaceNormal);
@@ -549,11 +551,7 @@ public class HullCalculator : UdonSharpBehaviour
             //General data
             Vector3 center = belowWaterTriangleCenters[i];
             Vector3 normal = belowWaterTriangleNormals[i];
-            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
-            float velocityMagnitude = velocity.magnitude;
-            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
             float area = belowWaterTriangleArea[i];
-
 
             //Buoyancy
             Vector3 buoyancyForce = waterDensity * gravity * GetDistanceToWater(center) * area * normal;
@@ -564,6 +562,10 @@ public class HullCalculator : UdonSharpBehaviour
 #endif
             linkedRigidbody.AddForceAtPosition(forceMultiplier * buoyancyForce, belowWaterTriangleCenters[i]);
 
+            continue;
+            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
+            float velocityMagnitude = velocity.magnitude;
+            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
 
             //Friction drag force
             float frictionDragForceMagnitude = 0.5f * waterDensity * belowWaterTriangleArea[i] * frictionalDragCoefficient * velocityMagnitude * velocityMagnitude * Mathf.Sin(angleBetweenVelocityAndFaceNormal);
