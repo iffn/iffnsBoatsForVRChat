@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: BoatAnalyzer
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 35522f1df34c0f34bb520c7c0990ce34,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 88cc662b23fe3084f96b161e1ea10f05,
     type: 2}
   udonAssembly: 
   assemblyError: 

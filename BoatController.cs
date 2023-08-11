@@ -9,14 +9,15 @@ public class BoatController : UdonSharpBehaviour
 {
     [SerializeField] StationManager driverStation;
 
-    [SerializeField] MeshFilter baseMesh;
+    [SerializeField] MeshFilter calculationMesh;
     [SerializeField] HullCalculator linkedHullCalculator;
     [SerializeField] Rigidbody linkedRigidbody;
     [SerializeField] Transform thruster;
     [SerializeField] Transform modelHolder;
 
     [SerializeField] Collider[] stationaryColliders;
-    [SerializeField] Collider[] movingColliders;
+
+    MeshCollider movingCollider;
 
     public HullCalculator LinkedHullCalculator
     {
@@ -34,9 +35,15 @@ public class BoatController : UdonSharpBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log($"Vertices count = {baseMesh.mesh.vertexCount}");
+        Debug.Log($"Vertices count = {calculationMesh.mesh.vertexCount}");
 
-        linkedHullCalculator.Setup(baseMesh, baseMesh.transform, linkedRigidbody);
+        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody);
+        
+        calculationMesh.transform.parent = transform;
+
+        Debug.Log(calculationMesh.transform.parent.name);
+
+        movingCollider = calculationMesh.transform.GetComponent <MeshCollider>();
 
         originalLinearDrag = linkedRigidbody.drag;
         originalAngularDrag = linkedRigidbody.angularDrag;
@@ -82,10 +89,7 @@ public class BoatController : UdonSharpBehaviour
             linkedHullCalculator.disablePhysics = !value;
             linkedRigidbody.useGravity = value;
 
-            foreach (Collider collider in movingColliders)
-            {
-                collider.enabled = value;
-            }
+            if(movingCollider) movingCollider.enabled = value;
 
             foreach (Collider collider in stationaryColliders)
             {
