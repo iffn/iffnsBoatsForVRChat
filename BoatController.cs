@@ -14,10 +14,7 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] Rigidbody linkedRigidbody;
     [SerializeField] Transform thruster;
     [SerializeField] Transform modelHolder;
-
-    [SerializeField] Collider[] stationaryColliders;
-
-    Collider movingCollider;
+    [SerializeField] Vector3 localCenterOfGravity;
 
     public HullCalculator LinkedHullCalculator
     {
@@ -37,8 +34,6 @@ public class BoatController : UdonSharpBehaviour
     {
         Debug.Log($"Vertices count = {calculationMesh.mesh.vertexCount}");
 
-        movingCollider = calculationMesh.transform.GetComponent<Collider>();
-        
         calculationMesh.transform.parent = transform;
 
         Debug.Log(calculationMesh.transform.parent.name);
@@ -48,6 +43,8 @@ public class BoatController : UdonSharpBehaviour
         originalLinearDrag = linkedRigidbody.drag;
         originalAngularDrag = linkedRigidbody.angularDrag;
 
+        linkedRigidbody.isKinematic = false;
+        linkedRigidbody.centerOfMass = localCenterOfGravity;
         Active = false;
     }
 
@@ -67,15 +64,20 @@ public class BoatController : UdonSharpBehaviour
 
             if (value)
             {
-                modelHolder.parent = transform;
+                modelHolder.SetPositionAndRotation(transform.position, transform.rotation);
+
+                transform.parent = modelHolder.transform.parent; //Set parent to parent of model holder if active
 
                 linkedRigidbody.drag = originalLinearDrag;
                 linkedRigidbody.angularDrag = originalAngularDrag;
+
+                Networking.SetOwner(Networking.LocalPlayer, modelHolder.gameObject);
             }
             else
             {
                 modelHolder.SetPositionAndRotation(transform.position, transform.rotation);
-                modelHolder.parent = transform.parent;
+
+                transform.parent = modelHolder.transform; //Set parent to synced model holder position if not active
 
                 linkedRigidbody.velocity = Vector3.zero;
                 linkedRigidbody.angularVelocity = Vector3.zero;
@@ -88,13 +90,6 @@ public class BoatController : UdonSharpBehaviour
 
             linkedHullCalculator.disablePhysics = !value;
             linkedRigidbody.useGravity = value;
-
-            if(movingCollider) movingCollider.enabled = value;
-
-            foreach (Collider collider in stationaryColliders)
-            {
-                collider.enabled = !value;
-            }
         }
     }
 
@@ -111,6 +106,8 @@ public class BoatController : UdonSharpBehaviour
             currentHorizontalSteeringAngle = Mathf.MoveTowards(currentHorizontalSteeringAngle, target, horizontalSteeringSpeed * Time.deltaTime);
 
             thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
+
+            modelHolder.SetPositionAndRotation(transform.position, transform.rotation);
         }
     }
 
