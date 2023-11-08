@@ -1,4 +1,5 @@
-﻿
+﻿//#define complexCalculation
+
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -57,7 +58,12 @@ public class BoatAnalyzer : UdonSharpBehaviour
 
         calculator.GenerateCalculationMeshes();
 
+#if complexCalculation
         calculator.CalculateForcesAndSaveToArray(velocity, Vector3.zero);
+#else
+        calculator.CalculateForcesAndSaveToArray(velocity);
+#endif
+
 
         calculator.SumUpDForces();
 
@@ -75,8 +81,11 @@ public class BoatAnalyzer : UdonSharpBehaviour
         HullCalculator calculator = linkedBoatController.LinkedHullCalculator;
 
         calculator.GenerateCalculationMeshes();
-
+#if complexCalculation
         calculator.CalculateForcesAndSaveToArray(Vector3.zero, Vector3.zero);
+#else
+        calculator.CalculateForcesAndSaveToArray(Vector3.zero);
+#endif
 
         calculator.SumUpDForces();
 
