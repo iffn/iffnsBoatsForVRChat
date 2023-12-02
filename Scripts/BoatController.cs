@@ -194,10 +194,6 @@ public class BoatController : UdonSharpBehaviour
             }
             else
             {
-                engineEnabled = false;
-
-                RequestSerialization();
-
                 //Colliders
                 if (linkedPlayerColliderCanBeNull) linkedPlayerColliderCanBeNull.gameObject.layer = defaultLayer;
                 boatCollider.gameObject.SetActive(false);
@@ -215,6 +211,8 @@ public class BoatController : UdonSharpBehaviour
                 }
             }
 
+            engineEnabled = value;
+            RequestSerialization();
             linkedHullCalculator.disablePhysics = !value;
             linkedRigidbody.useGravity = value;
             active = value;
