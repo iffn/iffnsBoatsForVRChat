@@ -283,7 +283,7 @@ public class BoatController : UdonSharpBehaviour
     //Events
     void Start()
     {
-        soundAvailable = (startupSound && runningSound && shutdownSound);
+        soundAvailable = (startupSound && startupSound.clip && runningSound && runningSound.clip && shutdownSound && shutdownSound.clip);
 
         localPlayer = Networking.LocalPlayer;
 
