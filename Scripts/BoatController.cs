@@ -29,7 +29,7 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] float thrust = 10000;
     [SerializeField] Vector3 localCenterOfGravity;
     [SerializeField] float maxRudderDeflectionAngle = 20;
-    [SerializeField] Vector3 dragCoefficients;
+    [SerializeField] Vector3 dragCoefficientsWithDensity = new Vector3(1000, 1000, 50);
     
     [Header("Linked components")]
     [SerializeField] Transform thruster;
@@ -296,11 +296,11 @@ public class BoatController : UdonSharpBehaviour
         linkedRigidbody.centerOfMass = localCenterOfGravity;
         Active = false;
 
-        dragCoefficients.x = Mathf.Clamp(Mathf.Abs(dragCoefficients.x), 0.0001f, 1000);
-        dragCoefficients.y = Mathf.Clamp(Mathf.Abs(dragCoefficients.y), 0.0001f, 1000);
-        dragCoefficients.z = Mathf.Clamp(Mathf.Abs(dragCoefficients.z), 0.0001f, 1000);
+        dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
+        dragCoefficientsWithDensity.y = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.y), 0.0001f, 1000);
+        dragCoefficientsWithDensity.z = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.z), 0.0001f, 1000);
 
-        if (dragCoefficients.x == 0 ) dragCoefficients = Vector3.one;
+        if (dragCoefficientsWithDensity.x == 0 ) dragCoefficientsWithDensity = Vector3.one;
     }
 
     // Update is called once per frame
@@ -352,6 +352,10 @@ public class BoatController : UdonSharpBehaviour
 
     public float debug;
 
+    public Vector3 velocityDebug;
+    public Vector3 dragForceDebug;
+    public Vector3 dragAreaDebug;
+
     private void FixedUpdate()
     {
         if (Input.GetKey(KeyCode.KeypadPlus))
@@ -369,10 +373,16 @@ public class BoatController : UdonSharpBehaviour
 
             Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
 
+            Vector3 dragArea = LinkedHullCalculator.DragAreaBelowWater;
+
             Vector3 localDragForce = Vector3.zero;
-            localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragCoefficients.x;
-            localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragCoefficients.y;
-            localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragCoefficients.z;
+            localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
+            localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
+            localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
+
+            velocityDebug = localVelocity;
+            dragAreaDebug = LinkedHullCalculator.DragAreaBelowWater;
+            dragForceDebug = localDragForce;
 
             linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
 

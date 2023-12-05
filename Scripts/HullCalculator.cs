@@ -53,6 +53,8 @@ public class HullCalculator : UdonSharpBehaviour
     int[] twoAboveTheWaterTriangles = new int[0];
     float boatLength = 1;
 
+    public Vector3 DragAreaBelowWater {  get; private set; }
+
     public float timeMs;
 
     public bool disablePhysics = true;
@@ -150,7 +152,18 @@ public class HullCalculator : UdonSharpBehaviour
             hullTriangleNormals[i / 3] = CalculateTriangleNormal(hullVerticesLocal[hullCorners[i]], hullVerticesLocal[hullCorners[i + 1]], hullVerticesLocal[hullCorners[i + 2]]);
         }
 
-        Vector3 localBoundingBoxOfMesh = linkedRigidbody.transform.InverseTransformVector(hullMeshFilter.transform.TransformVector(hullMesh.bounds.size));
+        Vector3 worldBoundingBoxOfMesh = hullMeshFilter.transform.TransformVector(hullMesh.bounds.size);
+
+        Vector3 localBoundingBoxOfMesh = linkedRigidbody.transform.InverseTransformVector(worldBoundingBoxOfMesh);
+
+        Vector3 belowWaterSize = localBoundingBoxOfMesh;
+        belowWaterSize.y = hullMesh.bounds.size.y * 0.5f - hullMesh.bounds.center.y - linkedRigidbody.transform.InverseTransformPoint(hullMeshFilter.transform.TransformPoint(hullMesh.bounds.center)).y;
+        DragAreaBelowWater = new Vector3(
+            Mathf.Abs(belowWaterSize.y * belowWaterSize.z),
+            Mathf.Abs(belowWaterSize.x * belowWaterSize.z),
+            Mathf.Abs(belowWaterSize.x * belowWaterSize.y));
+
+        Debug.Log($"{transform.parent.name}: Below water size = {belowWaterSize} -> {DragAreaBelowWater}");
 
         linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMesh, linkedRigidbody.mass);
     }
