@@ -152,20 +152,24 @@ public class HullCalculator : UdonSharpBehaviour
             hullTriangleNormals[i / 3] = CalculateTriangleNormal(hullVerticesLocal[hullCorners[i]], hullVerticesLocal[hullCorners[i + 1]], hullVerticesLocal[hullCorners[i + 2]]);
         }
 
-        Vector3 worldBoundingBoxOfMesh = hullMeshFilter.transform.TransformVector(hullMesh.bounds.size);
+        Vector3 worldBoundingBoxOfMeshCanBeNegative = hullMeshFilter.transform.TransformVector(hullMesh.bounds.size);
 
-        Vector3 localBoundingBoxOfMesh = linkedRigidbody.transform.InverseTransformVector(worldBoundingBoxOfMesh);
+        Vector3 localBoundingBoxOfMeshCanBeNegative = linkedRigidbody.transform.InverseTransformVector(worldBoundingBoxOfMeshCanBeNegative);
 
-        Vector3 belowWaterSize = localBoundingBoxOfMesh;
-        belowWaterSize.y = hullMesh.bounds.size.y * 0.5f - hullMesh.bounds.center.y - linkedRigidbody.transform.InverseTransformPoint(hullMeshFilter.transform.TransformPoint(hullMesh.bounds.center)).y;
+        Vector3 boundingBoxOfMeshPosition = linkedRigidbody.transform.InverseTransformPoint(hullMeshFilter.transform.TransformPoint(hullMesh.bounds.center));
+
+        Vector3 belowWaterSizeCanBeNegativie = localBoundingBoxOfMeshCanBeNegative;
+        belowWaterSizeCanBeNegativie.y = Mathf.Abs(worldBoundingBoxOfMeshCanBeNegative.y) * 0.5f - boundingBoxOfMeshPosition.y;
         DragAreaBelowWater = new Vector3(
-            Mathf.Abs(belowWaterSize.y * belowWaterSize.z),
-            Mathf.Abs(belowWaterSize.x * belowWaterSize.z),
-            Mathf.Abs(belowWaterSize.x * belowWaterSize.y));
+            Mathf.Abs(belowWaterSizeCanBeNegativie.y * belowWaterSizeCanBeNegativie.z),
+            Mathf.Abs(belowWaterSizeCanBeNegativie.x * belowWaterSizeCanBeNegativie.z),
+            Mathf.Abs(belowWaterSizeCanBeNegativie.x * belowWaterSizeCanBeNegativie.y));
 
-        Debug.Log($"{transform.parent.name}: Below water size = {belowWaterSize} -> {DragAreaBelowWater}");
+        Debug.Log($"{transform.parent.name}: Below water size = {belowWaterSizeCanBeNegativie} -> {DragAreaBelowWater} with {hullMesh.bounds.size}");
+        //Grand Banks: Below water size = (4.2, 6.4, -14.1) -> (90.1, 59.3, 26.8) with (4.2, 14.1, 3.0)
 
-        linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMesh, linkedRigidbody.mass);
+
+        linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMeshCanBeNegative, linkedRigidbody.mass);
     }
 
     Vector3 CalculateInertiaTensorOfBox(Vector3 size, float mass)
