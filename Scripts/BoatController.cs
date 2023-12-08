@@ -296,11 +296,13 @@ public class BoatController : UdonSharpBehaviour
         linkedRigidbody.centerOfMass = localCenterOfGravity;
         Active = false;
 
+        /*
         dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
         dragCoefficientsWithDensity.y = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.y), 0.0001f, 1000);
         dragCoefficientsWithDensity.z = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.z), 0.0001f, 1000);
 
         if (dragCoefficientsWithDensity.x == 0 ) dragCoefficientsWithDensity = Vector3.one;
+        */
     }
 
     // Update is called once per frame
