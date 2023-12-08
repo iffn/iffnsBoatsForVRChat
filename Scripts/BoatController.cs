@@ -1,4 +1,5 @@
-﻿
+﻿//#define dragDebug
+
 using NUMovementPlatformSyncMod;
 using UdonSharp;
 using UnityEngine;
@@ -82,7 +83,6 @@ public class BoatController : UdonSharpBehaviour
     bool active = false;
     bool remotelyActive = false;
     Vector3 currentThrust;
-    Vector3 currentDragForce;
     Vector3 velocity;
     float startupRamp = 0.5f;
     float currentHorizontalSteeringAngle = 0;
@@ -350,11 +350,11 @@ public class BoatController : UdonSharpBehaviour
         */
     }
 
-    public float debug;
-
+#if dragDebug 
     public Vector3 velocityDebug;
     public Vector3 dragForceDebug;
     public Vector3 dragAreaDebug;
+#endif
 
     private void FixedUpdate()
     {
@@ -380,25 +380,13 @@ public class BoatController : UdonSharpBehaviour
             localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
             localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
 
+#if dragDebug 
             velocityDebug = localVelocity;
-            dragAreaDebug = LinkedHullCalculator.DragAreaBelowWater;
+            dragAreaDebug = dragArea;
             dragForceDebug = localDragForce;
+#endif
 
             linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
-
-            currentDragForce = localDragForce;
-
-            /*
-            Vector3 localVelocityNormalized = rigidBodyTransform.InverseTransformDirection(linkedRigidbody.velocity).normalized;
-
-            Vector3 drag = new Vector3(
-                Mathf.Abs(localVelocityNormalized.x * dragCoefficients.x),
-                Mathf.Abs(localVelocityNormalized.y * dragCoefficients.y),
-                Mathf.Abs(localVelocityNormalized.z * dragCoefficients.z));
-
-            linkedRigidbody.drag = drag.magnitude;
-
-            */
 
             velocity = linkedRigidbody.velocity;
         }

@@ -1,5 +1,5 @@
 ﻿//#define applyForces
-#define sumUpForcesWhileDriving
+//#define sumUpForcesWhileDriving
 //#define complexCalculation
 
 using System;
@@ -164,10 +164,6 @@ public class HullCalculator : UdonSharpBehaviour
             Mathf.Abs(belowWaterSizeCanBeNegativie.y * belowWaterSizeCanBeNegativie.z),
             Mathf.Abs(belowWaterSizeCanBeNegativie.x * belowWaterSizeCanBeNegativie.z),
             Mathf.Abs(belowWaterSizeCanBeNegativie.x * belowWaterSizeCanBeNegativie.y));
-
-        Debug.Log($"{transform.parent.name}: Below water size = {belowWaterSizeCanBeNegativie} -> {DragAreaBelowWater} with {hullMesh.bounds.size}");
-        //Grand Banks: Below water size = (4.2, 6.4, -14.1) -> (90.1, 59.3, 26.8) with (4.2, 14.1, 3.0)
-
 
         linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMeshCanBeNegative, linkedRigidbody.mass);
     }
