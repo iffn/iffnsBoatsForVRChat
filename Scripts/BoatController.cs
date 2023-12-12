@@ -21,8 +21,7 @@ public class BoatController : UdonSharpBehaviour
     - Manage visual effects
     */
 
-    [UdonSynced] float syncedThrottleInput = 0;
-    [UdonSynced] float steeringInput = 0;
+    [UdonSynced] Vector2 syncedInputs = Vector2.zero;
     [UdonSynced] bool engineEnabled = false;
     
     //Unity assignments
@@ -78,6 +77,7 @@ public class BoatController : UdonSharpBehaviour
     readonly int mirrorReflectionLayer = 18;
     VRCObjectSync linkedObjectSync;
     bool soundAvailable;
+    bool isInVR;
 
     //Runtime parameters
     bool active = false;
@@ -87,6 +87,7 @@ public class BoatController : UdonSharpBehaviour
     float startupRamp = 0.5f;
     float currentHorizontalSteeringAngle = 0;
     float nextSerializationTime;
+    bool inputActive = false;
 
     public VRCObjectSync LinkedObjectSync
     {
@@ -153,8 +154,8 @@ public class BoatController : UdonSharpBehaviour
 
         startupRamp += Mathf.Clamp01(Time.deltaTime / startupSound.clip.length);
 
-        runningSound.pitch = Mathf.Abs(syncedThrottleInput) + 1;
-        runningSound.volume = (Mathf.Abs(syncedThrottleInput) * 0.5f + 0.5f) * startupRamp;
+        runningSound.pitch = Mathf.Abs(syncedInputs.y) + 1;
+        runningSound.volume = (Mathf.Abs(syncedInputs.y) * 0.5f + 0.5f) * startupRamp;
     }
 
     void StopSound()
@@ -227,31 +228,60 @@ public class BoatController : UdonSharpBehaviour
 
     void SetIndicators()
     {
-        if (wheel) wheel.InputValue = steeringInput;
-        if (throttleIndicator) throttleIndicator.InputValue = syncedThrottleInput;
+        if (wheel) wheel.InputValue = syncedInputs.x;
+        if (throttleIndicator) throttleIndicator.InputValue = syncedInputs.y;
     }
 
-    void GetDesktopInputs()
+    static Vector2 GetSmoothInputs()
     {
+        Vector2 returnValue = Vector2.zero;
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            syncedThrottleInput = Mathf.Clamp(syncedThrottleInput += Time.deltaTime, -1, 1);
+            returnValue.y += Time.deltaTime;
         }
 
         if (Input.GetKey(KeyCode.LeftControl))
         {
-            syncedThrottleInput = Mathf.Clamp(syncedThrottleInput -= Time.deltaTime, -1, 1);
+            returnValue.y -= Time.deltaTime;
         }
 
         if (Input.GetKey(KeyCode.Q))
         {
-            steeringInput = Mathf.Clamp(steeringInput -= Time.deltaTime, -1, 1);
+            returnValue.x -= Time.deltaTime;
         }
 
         if (Input.GetKey(KeyCode.E))
         {
-            steeringInput = Mathf.Clamp(steeringInput += Time.deltaTime, -1, 1);
+            returnValue.x += Time.deltaTime;
         }
+
+        return returnValue;
+    }
+
+    static Vector2 GetSquareInput()
+    {
+        Vector2 inputValue = new Vector2(
+            Input.GetAxis("Oculus_GearVR_LThumbstickX"),
+            Input.GetAxis("Oculus_GearVR_LThumbstickY"));
+
+        inputValue = Mathf.Clamp01(inputValue.magnitude) * inputValue.normalized; //Magnitude can apparently somehow be larger than 1
+
+        if (Mathf.Abs(inputValue.x) > Mathf.Abs(inputValue.y))
+        {
+            if (Mathf.Abs(inputValue.x) > 0)
+            {
+                float temp = inputValue.magnitude / Mathf.Abs(inputValue.x);
+                inputValue = temp * inputValue;
+            }
+        }
+        else if (Mathf.Abs(inputValue.y) > 0)
+        {
+            float temp = inputValue.magnitude / Mathf.Abs(inputValue.y);
+            inputValue = temp * inputValue;
+        }
+
+        return inputValue;
     }
 
     public string[] DebugText
@@ -268,8 +298,7 @@ public class BoatController : UdonSharpBehaviour
                 $"Constraints: {linkedRigidbody.constraints}",
                 $"IsSleeping: {linkedRigidbody.IsSleeping()}",
                 $"IsKinematic: {linkedRigidbody.isKinematic}",
-                $"{nameof(steeringInput)}: {steeringInput}",
-                $"{nameof(syncedThrottleInput)}: {syncedThrottleInput}",
+                $"{nameof(syncedInputs)}: {syncedInputs}",
                 $"{nameof(active)}: {active}",
                 $"{nameof(remotelyActive)}: {remotelyActive}",
             };
@@ -284,6 +313,7 @@ public class BoatController : UdonSharpBehaviour
         soundAvailable = (startupSound && startupSound.clip && runningSound && runningSound.clip && shutdownSound && shutdownSound.clip);
 
         localPlayer = Networking.LocalPlayer;
+        isInVR = localPlayer.IsUserInVR();
 
         rigidBodyTransform = linkedRigidbody.transform;
 
@@ -305,7 +335,6 @@ public class BoatController : UdonSharpBehaviour
         */
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (active)
@@ -316,12 +345,75 @@ public class BoatController : UdonSharpBehaviour
             }
 
             //Get inputs
-            if (!localPlayer.IsUserInVR()) GetDesktopInputs();
+            if (!isInVR)
+            {
+                bool gotInput = false;
 
-            float target = -steeringInput * maxRudderDeflectionAngle;
+                if (Input.GetKeyDown(KeyCode.W))
+                {
+                    syncedInputs.y = 1;
+                    inputActive = true;
+                }
+                else if (Input.GetKeyUp(KeyCode.W))
+                {
+                    syncedInputs.y = 0;
+                    inputActive = true;
+                }
 
-            //currentHorizontalSteeringAngle = Mathf.MoveTowards(currentHorizontalSteeringAngle, target, horizontalSteeringSpeed * Time.deltaTime);
-            currentHorizontalSteeringAngle = target;
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    syncedInputs.y = -1;
+                    inputActive = true;
+                }
+                else if (Input.GetKeyUp(KeyCode.S))
+                {
+                    syncedInputs.y = 0;
+                    inputActive = false;
+                }
+
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    syncedInputs.x = -1;
+                    inputActive = true;
+                }
+                else if (Input.GetKeyUp(KeyCode.A))
+                {
+                    syncedInputs.x = 0;
+                    inputActive = false;
+                }
+
+                if (Input.GetKeyDown(KeyCode.D))
+                {
+                    syncedInputs.x = 1;
+                    inputActive = true;
+                }
+                else if (Input.GetKeyUp(KeyCode.D))
+                {
+                    syncedInputs.x = 0;
+                    inputActive = false;
+                }
+
+                if (!inputActive)
+                {
+                    Vector2 controllerInput = GetSquareInput();
+
+                    if (controllerInput.magnitude < 0.1f)
+                    {
+                        //Include Shift Ctrl Q E
+                        Vector2 smoothInputs = GetSmoothInputs();
+
+                        syncedInputs.x = Mathf.Clamp(syncedInputs.x + smoothInputs.x, -1, 1);
+                        syncedInputs.y = Mathf.Clamp(syncedInputs.y + smoothInputs.y, -1, 1);
+                    }
+                    else syncedInputs = controllerInput;
+                }
+            }
+            else
+            {
+                syncedInputs = GetSquareInput();
+            }
+
+            currentHorizontalSteeringAngle = -syncedInputs.x * maxRudderDeflectionAngle;
 
             thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
 
@@ -369,7 +461,7 @@ public class BoatController : UdonSharpBehaviour
 
         if (active)
         {
-            currentThrust = syncedThrottleInput * thrust * thruster.forward;
+            currentThrust = syncedInputs.y * thrust * thruster.forward;
 
             linkedRigidbody.AddForceAtPosition(currentThrust, thruster.position);
 
@@ -414,20 +506,6 @@ public class BoatController : UdonSharpBehaviour
         remotelyActive = engineEnabled;
 
         if (linkedPlayerColliderCanBeNull) linkedPlayerColliderCanBeNull.shouldSyncPlayer = remotelyActive;
-    }
-
-    public override void InputMoveHorizontal(float value, UdonInputEventArgs args)
-    {
-        if(!active) return;
-
-        steeringInput = value;
-    }
-
-    public override void InputMoveVertical(float value, UdonInputEventArgs args)
-    {
-        if(!active) return;
-
-        syncedThrottleInput = value;
     }
 
     public void LocalPlayerEntered()
