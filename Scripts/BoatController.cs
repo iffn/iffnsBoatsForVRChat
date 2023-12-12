@@ -261,6 +261,7 @@ public class BoatController : UdonSharpBehaviour
 
     static Vector2 GetSquareInput()
     {
+        //Source: https://github.com/Sacchan-VRC/SaccFlightAndVehicles/blob/b04482a48c808d8e13524ce6711a7853e4d7afda/Scripts/SaccAirVehicle/SaccAirVehicle.cs#L1140
         Vector2 inputValue = new Vector2(
             Input.GetAxis("Oculus_GearVR_LThumbstickX"),
             Input.GetAxis("Oculus_GearVR_LThumbstickY"));
