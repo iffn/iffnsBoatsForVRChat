@@ -348,8 +348,6 @@ public class BoatController : UdonSharpBehaviour
             //Get inputs
             if (!isInVR)
             {
-                bool gotInput = false;
-
                 if (Input.GetKeyDown(KeyCode.W))
                 {
                     syncedInputs.y = 1;
@@ -358,7 +356,7 @@ public class BoatController : UdonSharpBehaviour
                 else if (Input.GetKeyUp(KeyCode.W))
                 {
                     syncedInputs.y = 0;
-                    inputActive = true;
+                    inputActive = false;
                 }
 
                 if (Input.GetKeyDown(KeyCode.S))
