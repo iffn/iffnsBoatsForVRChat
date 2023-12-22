@@ -460,7 +460,7 @@ public class BoatController : UdonSharpBehaviour
 
         if (active)
         {
-            if(thruster.transform.position.y > 0) //ToDo: Implement wave function
+            if(thruster.transform.position.y < 0) //ToDo: Implement wave function
             {
                 currentThrust = syncedInputs.y * thrust * thruster.forward;
 
