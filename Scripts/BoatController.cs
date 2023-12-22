@@ -460,9 +460,16 @@ public class BoatController : UdonSharpBehaviour
 
         if (active)
         {
-            currentThrust = syncedInputs.y * thrust * thruster.forward;
+            if(thruster.transform.position.y > 0) //ToDo: Implement wave function
+            {
+                currentThrust = syncedInputs.y * thrust * thruster.forward;
 
-            linkedRigidbody.AddForceAtPosition(currentThrust, thruster.position);
+                linkedRigidbody.AddForceAtPosition(currentThrust, thruster.position);
+            }
+            else
+            {
+                //ToDo: Modify sound
+            }
 
             Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
 
