@@ -1,6 +1,8 @@
 ﻿//#define applyForces
 //#define sumUpForcesWhileDriving
 //#define complexCalculation
+//#define debugVelocity
+
 
 using System;
 using UdonSharp;
@@ -36,6 +38,9 @@ public class HullCalculator : UdonSharpBehaviour
     public Vector3[] belowWaterTriangleCenters = new Vector3[0];
 #if complexCalculation
     public Vector3[] aboveWaterTriangleNormals = new Vector3[0];
+#endif
+#if debugVelocity
+    public float debugVelocity;
 #endif
     public Vector3[] belowWaterTriangleNormals = new Vector3[0];
     public Vector3[] buoyancyForces = new Vector3[0];
@@ -186,6 +191,10 @@ public class HullCalculator : UdonSharpBehaviour
 
     private void FixedUpdate()
     {
+#if debugVelocity
+        debugVelocity = linkedRigidbody.velocity.magnitude;
+#endif
+
         if (disablePhysics) return;
 
         GenerateCalculationMeshes();
