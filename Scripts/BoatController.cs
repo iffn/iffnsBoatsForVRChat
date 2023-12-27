@@ -123,6 +123,14 @@ public class BoatController : UdonSharpBehaviour
     float nextSerializationTime;
     bool inputActive = false;
 
+    public Rigidbody LinkedRigidbody
+    {
+        get
+        {
+            return linkedRigidbody;
+        }
+    }
+
     public VRCObjectSync LinkedObjectSync
     {
         get
