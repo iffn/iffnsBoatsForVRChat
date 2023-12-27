@@ -27,7 +27,6 @@ public class BoatController : UdonSharpBehaviour
     //Unity assignments
     [Header("Behavior parameters")]
     [SerializeField] float thrust = 10000;
-    [SerializeField] Vector3 localCenterOfGravity;
     [SerializeField] float maxRudderDeflectionAngle = 20;
     [SerializeField] Vector3 dragCoefficientsWithDensity = new Vector3(1000, 1000, 50);
     
@@ -324,7 +323,6 @@ public class BoatController : UdonSharpBehaviour
 
         linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
 
-        linkedRigidbody.centerOfMass = localCenterOfGravity;
         Active = false;
 
         /*
