@@ -96,6 +96,7 @@ GameObject:
   - component: {fileID: 8881532339635379047}
   - component: {fileID: 7337860465610168572}
   - component: {fileID: 4031239772974441933}
+  - component: {fileID: -5702026235528186409}
   m_Layer: 0
   m_Name: TugSystem
   m_TagString: Untagged
@@ -159,7 +160,7 @@ MonoBehaviour:
   originPoint: {fileID: 0}
   rope: {fileID: 1124994456642061324}
   targetPoint: {fileID: 7283408474007952323}
-  springFactor: 500
+  springFactor: 50000
   ropeForceDebug: 0
 --- !u!114 &7337860465610168572
 MonoBehaviour:
@@ -208,6 +209,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.1, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-5702026235528186409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 746832622166198393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1783056023, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AllowCollisionOwnershipTransfer: 1
 --- !u!1 &3403334030779720459
 GameObject:
   m_ObjectHideFlags: 0

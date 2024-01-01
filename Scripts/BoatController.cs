@@ -117,7 +117,6 @@ public class BoatController : UdonSharpBehaviour
     public LocalBoatStates localBoatState = LocalBoatStates.Idle;
     bool enginePreviouslyActive = false;
     Vector3 currentThrust;
-    Vector3 velocity;
     float startupRamp = 0.5f;
     float currentHorizontalSteeringAngle = 0;
     float nextSerializationTime;
@@ -308,6 +307,7 @@ public class BoatController : UdonSharpBehaviour
                             PlatformActiveForMovement = true;
                             EngineActive = true;
                             syncedOwnershipLocked = true;
+                            RequestSerialization();
                             break;
                         case LocalBoatStates.Driven:
                             //No change
@@ -316,6 +316,12 @@ public class BoatController : UdonSharpBehaviour
                             //Exception: Should not be reachable
                             break;
                         case LocalBoatStates.NetworkControlled:
+                            Networking.SetOwner(localPlayer, gameObject);
+                            LocalPhysicsActive = true;
+                            PlatformActiveForMovement = true;
+                            EngineActive = true;
+                            syncedOwnershipLocked = true;
+                            RequestSerialization();
                             break;
                         default:
                             break;
@@ -667,6 +673,26 @@ public class BoatController : UdonSharpBehaviour
     public Vector3 dragAreaDebug;
 #endif
 
+    void CalculateAndApplyDrag()
+    {
+        Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
+
+        Vector3 dragArea = LinkedHullCalculator.DragAreaBelowWater;
+
+        Vector3 localDragForce = Vector3.zero;
+        localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
+        localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
+        localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
+
+#if dragDebug
+                velocityDebug = localVelocity;
+                dragAreaDebug = dragArea;
+                dragForceDebug = localDragForce;
+#endif
+
+        linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
+    }
+
     private void FixedUpdate()
     {
         modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
@@ -687,28 +713,10 @@ public class BoatController : UdonSharpBehaviour
                 {
                     //ToDo: Modify sound
                 }
-
-                Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
-
-                Vector3 dragArea = LinkedHullCalculator.DragAreaBelowWater;
-
-                Vector3 localDragForce = Vector3.zero;
-                localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
-                localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
-                localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
-
-#if dragDebug
-                velocityDebug = localVelocity;
-                dragAreaDebug = dragArea;
-                dragForceDebug = localDragForce;
-#endif
-
-                linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
-
-                velocity = linkedRigidbody.velocity;
-
+                CalculateAndApplyDrag();
                 break;
             case LocalBoatStates.Towed:
+                CalculateAndApplyDrag();
                 break;
             case LocalBoatStates.NetworkControlled:
                 break;
@@ -762,6 +770,7 @@ public class BoatController : UdonSharpBehaviour
                     //No change, assumed discard
                     break;
                 case LocalBoatStates.NetworkControlled:
+                    //Other player disconnected
                     LocalBoatState = LocalBoatStates.Idle;
                     break;
                 default:

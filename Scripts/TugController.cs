@@ -72,6 +72,12 @@ public class TugController : UdonSharpBehaviour
         ropeActive = true;
     }
 
+    void DetachRope()
+    {
+        transform.parent = originPoint.transform;
+        ropeActive = false;
+    }
+
 
     private void FixedUpdate()
     {
@@ -100,7 +106,11 @@ public class TugController : UdonSharpBehaviour
 
     public override void Interact()
     {
+        if(ropeActive) DetachRope();
+
         held = true;
+
+        if(!Networking.IsOwner(gameObject)) Networking.SetOwner(localPlayer, gameObject);
     }
 
     public override void InputUse(bool value, UdonInputEventArgs args)
@@ -141,5 +151,14 @@ public class TugController : UdonSharpBehaviour
         if (!held) return;
 
         held = false;
+    }
+
+    public override void OnOwnershipTransferred(VRCPlayerApi player)
+    {
+        if (!player.isLocal)
+        {
+            held = false;
+            if (ropeActive) DetachRope();
+        }
     }
 }
