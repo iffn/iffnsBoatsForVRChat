@@ -23,13 +23,13 @@ public class BoatController : UdonSharpBehaviour
 
     [UdonSynced] Vector2 syncedInputs = Vector2.zero;
     [UdonSynced] bool engineEnabled = false;
-    
+
     //Unity assignments
     [Header("Behavior parameters")]
     [SerializeField] float thrust = 10000;
     [SerializeField] float maxRudderDeflectionAngle = 20;
     [SerializeField] Vector3 dragCoefficientsWithDensity = new Vector3(1000, 1000, 50);
-    
+
     [Header("Linked components")]
     [SerializeField] Transform thruster;
     [SerializeField] MeshFilter calculationMesh;
@@ -46,7 +46,8 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] AudioSource runningSound;
     [SerializeField] AudioSource shutdownSound;
     [SerializeField] PlayerColliderController linkedPlayerColliderCanBeNull;
-    
+
+
     public bool CheckAssignments()
     {
         if (thruster == null) return false;
@@ -77,6 +78,8 @@ public class BoatController : UdonSharpBehaviour
     VRCObjectSync linkedObjectSync;
     bool soundAvailable;
     bool isInVR;
+    Vector3 spawnPosition;
+    Quaternion spawnRotation;
 
     //Runtime parameters
     bool active = false;
@@ -87,6 +90,8 @@ public class BoatController : UdonSharpBehaviour
     float currentHorizontalSteeringAngle = 0;
     float nextSerializationTime;
     bool inputActive = false;
+
+
 
     public VRCObjectSync LinkedObjectSync
     {
@@ -129,6 +134,20 @@ public class BoatController : UdonSharpBehaviour
     }
 
     //Functions
+    public void Respawn()
+    {
+        if (!Networking.IsOwner(gameObject)) return;
+
+        StopRigidbody();
+
+        rigidBodyTransform.SetPositionAndRotation(spawnPosition, spawnRotation);
+
+        if (!active)
+        {
+            modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
+        }
+    }
+
     public void StopRigidbody()
     {
         linkedRigidbody.velocity = Vector3.zero;
@@ -310,6 +329,9 @@ public class BoatController : UdonSharpBehaviour
     //Events
     void Start()
     {
+        spawnPosition = linkedRigidbody.transform.position;
+        spawnRotation = linkedRigidbody.transform.rotation;
+
         soundAvailable = (startupSound && startupSound.clip && runningSound && runningSound.clip && shutdownSound && shutdownSound.clip);
 
         localPlayer = Networking.LocalPlayer;
