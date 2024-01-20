@@ -4,7 +4,9 @@ Shader "TestWaterHeightColor"
 {
 	Properties
 	{
-		
+		_TimeScale("TimeScale", Float) = 1
+		_WaveScale("WaveScale", Float) = 1
+
 	}
 	
 	SubShader
@@ -66,7 +68,9 @@ Shader "TestWaterHeightColor"
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
-			
+			uniform float _WaveScale;
+			uniform float _TimeScale;
+
 			
 			v2f vert ( appdata v )
 			{
@@ -102,7 +106,9 @@ Shader "TestWaterHeightColor"
 				#ifdef ASE_NEEDS_FRAG_WORLD_POSITION
 				float3 WorldPosition = i.worldPos;
 				#endif
-				float4 temp_cast_0 = ((0.0 + (sin( ( WorldPosition.x + _Time.y ) ) - -1.0) * (1.0 - 0.0) / (1.0 - -1.0))).xxxx;
+				float temp_output_24_0_g1 = _TimeScale;
+				float mulTime19_g1 = _Time.y * temp_output_24_0_g1;
+				float4 temp_cast_0 = ((0.0 + (sin( ( ( WorldPosition.x * _WaveScale ) + mulTime19_g1 ) ) - -1.0) * (1.0 - 0.0) / (1.0 - -1.0))).xxxx;
 				
 				
 				finalColor = temp_cast_0;
@@ -117,8 +123,12 @@ Shader "TestWaterHeightColor"
 }
 /*ASEBEGIN
 Version=19202
-Node;AmplifyShaderEditor.FunctionNode;14;-371.4607,-110.7915;Inherit;False;WaveFunction;-1;;1;c7900e82f74a80649af6c092884b701c;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;15;96.74341,-49.68657;Float;False;True;-1;2;ASEMaterialInspector;100;5;TestWaterHeightColor;0770190933193b94aaa3065e307002fa;True;Unlit;0;0;Unlit;2;False;True;0;1;False;;0;False;;0;1;False;;0;False;;True;0;False;;0;False;;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;RenderType=Opaque=RenderType;True;2;False;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;0;;0;0;Standard;1;Vertex Position,InvertActionOnDeselection;1;0;0;1;True;False;;False;0
-WireConnection;15;0;14;0
+Node;AmplifyShaderEditor.FunctionNode;16;-371.4607,-110.7915;Inherit;False;WaveFunction;-1;;1;c7900e82f74a80649af6c092884b701c;0;2;24;FLOAT;0;False;26;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;17;-578.4565,-114.7205;Inherit;False;Property;_TimeScale;TimeScale;0;0;Create;True;0;0;0;False;0;False;1;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;18;-577.4565,-44.72049;Inherit;False;Property;_WaveScale;WaveScale;1;0;Create;True;0;0;0;False;0;False;1;1;0;0;0;1;FLOAT;0
+WireConnection;15;0;16;0
+WireConnection;16;24;17;0
+WireConnection;16;26;18;0
 ASEEND*/
-//CHKSM=87BBE0F5B35BA0FC63DA94B4A8FDA2C2AF051E4F
+//CHKSM=93312952DBCA99578C3E534FCD00CAFDC8E925C4

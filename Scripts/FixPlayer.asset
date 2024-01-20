@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: FixPlayer
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 7a982e47330288e47b7bd6570947e6d7,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 629632f582ea11f46b71563c9a92499f,
     type: 2}
   udonAssembly: 
   assemblyError: 
