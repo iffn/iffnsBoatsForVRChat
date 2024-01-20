@@ -2823,11 +2823,6 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1977373851509992489, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
-    - target: {fileID: 2432895633259558717, guid: 905285fb6a17463428fd7ec02dd63172,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 2473216332575604442, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: serializationData.Prefab
@@ -2853,12 +2848,12 @@ PrefabInstance:
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.48
+      value: 3.83
       objectReference: {fileID: 0}
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -2868,7 +2863,7 @@ PrefabInstance:
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -2883,7 +2878,7 @@ PrefabInstance:
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 5801997057215951484, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -2912,6 +2907,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6288982884767349903, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
+    - target: {fileID: 6398200135822425777, guid: 905285fb6a17463428fd7ec02dd63172,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6398200135822425777, guid: 905285fb6a17463428fd7ec02dd63172,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 7610916481741968083, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: serializationData.Prefab
@@ -3392,7 +3397,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &1223061364
 MeshRenderer:
   m_ObjectHideFlags: 0

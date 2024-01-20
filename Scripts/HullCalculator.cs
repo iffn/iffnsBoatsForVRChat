@@ -7,6 +7,8 @@
 using System;
 using UdonSharp;
 using UnityEngine;
+using VRC.Udon.Common.Interfaces;
+using VRC.SDK3.Rendering;
 
 public class HullCalculator : UdonSharpBehaviour
 {
@@ -15,6 +17,53 @@ public class HullCalculator : UdonSharpBehaviour
     // https://www.gamedeveloper.com/programming/water-interaction-model-for-boats-in-video-games
 
     //Original hull data
+    [Header("Camera system")]
+    [SerializeField] Transform cameraHolderAtSeaLevel;
+    [SerializeField] Texture linkedRenderTexture;
+    [SerializeField] Camera linkedCamera;
+    public float waveHeight = 1f;
+
+    //Fixed parameters
+    int resolution = 256;
+    public float[] pixels = new float[8 * 8];
+    float cameraSize = 1f;
+    float localToCameraConversionFactor = 1;
+    Vector3 centerOffset;
+
+    void SetupCameraSystem(float size)
+    {
+        resolution = linkedRenderTexture.width;
+        pixels = new float[resolution * resolution];
+
+        //Currently driven by camera orthographic size --> Swtich to bounding box
+        cameraSize = size;
+        linkedCamera.orthographicSize = cameraSize;
+        localToCameraConversionFactor = 0.5f * resolution / cameraSize;
+        linkedCamera.transform.localScale = new Vector3(cameraSize * 2, cameraSize * 2, linkedCamera.transform.localScale.z);
+        centerOffset = new Vector3(cameraSize, 0, cameraSize);
+
+        VRCAsyncGPUReadback.Request(linkedRenderTexture, 0, TextureFormat.RFloat, (IUdonEventReceiver)this);
+    }
+
+    public int previousIndex;
+    float GetWaterHeightAtPosition(Vector3 localPosition)
+    {
+        Vector3 relativePosition = (localPosition + centerOffset) * localToCameraConversionFactor;
+
+        int index = (int)(relativePosition.x)
+            + (int)(relativePosition.z) * resolution;
+
+        previousIndex = index;
+
+        if (index < 0) index = 0;
+        else if (index > pixels.Length - 1) index = pixels.Length - 1;
+
+
+        return pixels[index] * waveHeight;
+    }
+
+
+    [Header("Original hull data")]
     Mesh hullMesh;
     Transform hullTransform;
     Vector3[] hullVerticesLocal;
@@ -98,6 +147,7 @@ public class HullCalculator : UdonSharpBehaviour
 
     public void Setup(MeshFilter hullMeshFilter, Transform hullTransform, Rigidbody linkedRigidbody)
     {
+
         hullMesh = hullMeshFilter.mesh;
         this.hullTransform = hullTransform;
 
@@ -148,7 +198,9 @@ public class HullCalculator : UdonSharpBehaviour
         oneAboveTheWaterTriangles = new int[hullMeshTriangleCount];
         twoAboveTheWaterTriangles = new int[hullMeshTriangleCount];
 
-        boatLength = hullMesh.bounds.max.z;
+        boatLength = hullMesh.bounds.size.y;
+
+        Debug.Log($"Boat bounds max = {hullMesh.bounds.size}");
 
         for (int i = 0; i < hullCorners.Length; i += 3)
         {
@@ -171,6 +223,8 @@ public class HullCalculator : UdonSharpBehaviour
             Mathf.Abs(belowWaterSizeCanBeNegativie.x * belowWaterSizeCanBeNegativie.y));
 
         linkedRigidbody.inertiaTensor = CalculateInertiaTensorOfBox(localBoundingBoxOfMeshCanBeNegative, linkedRigidbody.mass);
+        
+        SetupCameraSystem(boatLength * 2f);
     }
 
     Vector3 CalculateInertiaTensorOfBox(Vector3 size, float mass)
@@ -194,6 +248,8 @@ public class HullCalculator : UdonSharpBehaviour
 #if debugVelocity
         debugVelocity = linkedRigidbody.velocity.magnitude;
 #endif
+
+        cameraHolderAtSeaLevel.position = new Vector3(transform.position.x, 0, transform.position.z);
 
         if (disablePhysics) return;
 
@@ -659,7 +715,8 @@ public class HullCalculator : UdonSharpBehaviour
 
     float GetDistanceToWater(Vector3 positionGlobal)
     {
-        return positionGlobal.y; //Simple: Calm water at 0
+        //return positionGlobal.y; //Simple: Calm water at 0
+        return positionGlobal.y - GetWaterHeightAtPosition(cameraHolderAtSeaLevel.InverseTransformPoint(positionGlobal));
     }
 
     public Vector3 CalculateTriangleNormal(Vector3 p1, Vector3 p2, Vector3 p3)
@@ -687,5 +744,26 @@ public class HullCalculator : UdonSharpBehaviour
         float b = Vector3.Distance(C, A);
         float gamma = Vector3.Angle(A - C, B - C) * Mathf.Deg2Rad;
         return 0.5f * a * b * Mathf.Sin(gamma);
+    }
+
+    //Source: https://creators.vrchat.com/worlds/vrc-graphics/asyncgpureadback/
+    public override void OnAsyncGpuReadbackComplete(VRCAsyncGPUReadbackRequest request)
+    {
+        if (!request.hasError)
+        {
+#if logFrequency
+            Debug.Log($"Took {sw.Elapsed.TotalSeconds * 1000.0}ms");
+            sw.Restart();
+#endif
+            VRCAsyncGPUReadback.Request(linkedRenderTexture, 0, TextureFormat.RFloat, (IUdonEventReceiver)this);
+
+            request.TryGetData(pixels);
+
+        }
+        else
+        {
+            Debug.LogError("GPU readback error!");
+            return;
+        }
     }
 }
