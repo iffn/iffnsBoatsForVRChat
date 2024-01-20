@@ -9,6 +9,7 @@ using VRC.Udon.Wrapper.Modules;
 
 public class ReadFromCamera : UdonSharpBehaviour
 {
+    [SerializeField] Transform cameraHolderAtSeaLevel;
 
     [SerializeField] Transform[] debugTransforms;
 
@@ -24,10 +25,10 @@ public class ReadFromCamera : UdonSharpBehaviour
     public int resolution = 256;
     public float[] pixels = new float[8*8];
     public float cameraSize = 1f;
-    public float pixelSize = 0.1f;
-    public float invertedPixelSize = 0.1f;
+    public float localToCameraConversionFactor = 1;
+    public float pixelFactor = 0.1f;
     public int halfResolution = 256 / 2;
-    public Vector3 centerOffset;
+    Vector3 centerOffset;
     
     void Start()
     {
@@ -37,11 +38,16 @@ public class ReadFromCamera : UdonSharpBehaviour
 
         //Currently driven by camera orthographic size --> Swtich to bounding box
         cameraSize = linkedCamera.orthographicSize;
+        localToCameraConversionFactor =  0.5f * resolution / cameraSize;
+        //invertedDoubleCameraSize = 2f;
         linkedCamera.transform.localScale = new Vector3(cameraSize * 2, cameraSize * 2, linkedCamera.transform.localScale.z);
-        pixelSize = cameraSize / resolution;
-        invertedPixelSize = 1f / pixelSize;
-        centerOffset = new Vector3(cameraSize * 0.5f, 0, cameraSize * 0.5f);
+        pixelFactor = 1f / resolution;
+        centerOffset = new Vector3(cameraSize, 0, cameraSize);
 
+        foreach(Transform currentTransform in debugTransforms)
+        {
+            currentTransform.parent = cameraHolderAtSeaLevel;
+        }
 
         VRCAsyncGPUReadback.Request(linkedRenderTexture, 0, TextureFormat.RFloat, (IUdonEventReceiver)this);
 #if logFrequency
@@ -68,22 +74,25 @@ public class ReadFromCamera : UdonSharpBehaviour
 
             localPosition.y = GetWaterHeightAtPosition(localPosition);
 
-            debugTransform.position = localPosition;
+            debugTransform.localPosition = localPosition;
         }
     }
 
+    public Vector3 localPositionDebug;
     public Vector3 relativePositionDebug;
     public int debugIndex;
     public float debugValue;
 
     float GetWaterHeightAtPosition(Vector3 localPosition)
     {
-        Vector3 relativePosition = cameraSize * localPosition + centerOffset;
+        localPositionDebug = localPosition;
+
+        Vector3 relativePosition = (localPosition + centerOffset) * localToCameraConversionFactor;
 
         relativePositionDebug = relativePosition;
 
-        int index = Mathf.RoundToInt(relativePosition.x * invertedPixelSize) * resolution
-            + Mathf.RoundToInt(relativePosition.z * invertedPixelSize);
+        int index = (int)(relativePosition.x)
+            + (int)(relativePosition.z) * resolution;
 
         debugIndex = index;
 
