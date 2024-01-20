@@ -11,8 +11,7 @@ using VRC.Udon.Common;
 public enum LocalBoatStates
 {
     Idle,
-    Driven,
-    Towed,
+    LocallyActive,
     NetworkControlled
 }
 
@@ -22,39 +21,29 @@ public class BoatController : UdonSharpBehaviour
     Purpose:
     - Manage interaction beteen boat physics player collider
     - Manage ownership
-    - Manage inputs
-    - Manage steering forces
-    - Manage indicators
-    - Manage sounds
+    - Manage inputs -- No longer
+    - Manage steering forces -- No longer
+    - Manage indicators -- No longer
+    - Manage sounds -- No longer
     - Manage visual effects
     */
-
-    [UdonSynced] Vector2 syncedInputs = Vector2.zero;
+    
     [UdonSynced] bool syncedPlatformActiveForMovement = false;
     [UdonSynced] bool syncedOwnershipLocked = false;
-    [UdonSynced] bool syncedEngineActive = false;
     
     //Unity assignments
     [Header("Behavior parameters")]
-    [SerializeField] float thrust = 10000;
-    [SerializeField] float maxRudderDeflectionAngle = 20;
     [SerializeField] Vector3 dragCoefficientsWithDensity = new Vector3(1000, 1000, 50);
-    
+
     [Header("Linked components")]
-    [SerializeField] Transform thruster;
+    [SerializeField] BoatDriveSystem linkedDriveSystem;
     [SerializeField] MeshFilter calculationMesh;
     [SerializeField] Rigidbody linkedRigidbody;
     [SerializeField] HullCalculator linkedHullCalculator;
     [SerializeField] Transform modelHolder;
     [SerializeField] Transform externalTeleportTarget;
-    [SerializeField] StationManager driverStation;
-    [SerializeField] Indicator wheel;
-    [SerializeField] Indicator throttleIndicator;
     [SerializeField] Collider boatCollider;
     [SerializeField] ParticleSystem[] BowEmitters;
-    [SerializeField] AudioSource startupSound;
-    [SerializeField] AudioSource runningSound;
-    [SerializeField] AudioSource shutdownSound;
     [SerializeField] PlayerColliderController linkedPlayerColliderCanBeNull;
     
     public string[] DebugText
@@ -71,10 +60,8 @@ public class BoatController : UdonSharpBehaviour
                 $"Constraints: {linkedRigidbody.constraints}",
                 $"IsSleeping: {linkedRigidbody.IsSleeping()}",
                 $"IsKinematic: {linkedRigidbody.isKinematic}",
-                $"{nameof(syncedInputs)}: {syncedInputs}",
                 $"{nameof(syncedPlatformActiveForMovement)}: {syncedPlatformActiveForMovement}",
                 $"{nameof(syncedOwnershipLocked)}: {syncedOwnershipLocked}",
-                $"{nameof(syncedEngineActive)}: {syncedEngineActive}",
                 $"{nameof(localBoatState)}: {localBoatState}",
             };
 
@@ -84,20 +71,13 @@ public class BoatController : UdonSharpBehaviour
 
     public bool CheckAssignments()
     {
-        if (thruster == null) return false;
         if (calculationMesh == null) return false;
         if (linkedRigidbody == null) return false;
         if (LinkedHullCalculator == null) return false;
         if (modelHolder == null) return false;
         if (externalTeleportTarget == null) return false;
-        if (driverStation == null) return false;
-        if (wheel == null) return false;
-        if (throttleIndicator == null) return false;
         if (boatCollider == null) return false;
         if (LinkedPlayerColliderControllerCanBeNull == null) return false;
-        if (startupSound == null) return false;
-        if (runningSound == null) return false;
-        if (shutdownSound == null) return false;
 
         return true;
     }
@@ -110,17 +90,14 @@ public class BoatController : UdonSharpBehaviour
     //readonly int pickupLayer = 13;
     readonly int mirrorReflectionLayer = 18;
     VRCObjectSync linkedObjectSync;
-    bool soundAvailable;
-    bool isInVR;
+    
 
     //Runtime parameters
     public LocalBoatStates localBoatState = LocalBoatStates.Idle;
     bool enginePreviouslyActive = false;
-    Vector3 currentThrust;
     float startupRamp = 0.5f;
-    float currentHorizontalSteeringAngle = 0;
     float nextSerializationTime;
-    bool inputActive = false;
+    
 
     public Rigidbody LinkedRigidbody
     {
@@ -184,50 +161,7 @@ public class BoatController : UdonSharpBehaviour
         modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
     }
 
-    void StartSound()
-    {
-        if (!soundAvailable) return;
-
-        startupSound.Play();
-        runningSound.Play();
-        runningSound.volume = 0;
-        startupRamp = 0;
-    }
-
-    void UpdateSound()
-    {
-        if (!soundAvailable) return;
-
-        startupRamp += Mathf.Clamp01(Time.deltaTime / startupSound.clip.length);
-
-        runningSound.pitch = Mathf.Abs(syncedInputs.y) + 1;
-        runningSound.volume = (Mathf.Abs(syncedInputs.y) * 0.5f + 0.5f) * startupRamp;
-    }
-
-    void StopSound()
-    {
-        if (!soundAvailable) return;
-
-        runningSound.Stop();
-        shutdownSound.Play();
-    }
     
-    bool EngineActive
-    {
-        set
-        {
-            if (value)
-            {
-                if(!enginePreviouslyActive) StartSound();
-            }
-            else
-            {
-                if(enginePreviouslyActive) StopSound();
-            }
-
-            enginePreviouslyActive = value;
-        }
-    }
 
     bool LocalPhysicsActive
     {
@@ -282,12 +216,7 @@ public class BoatController : UdonSharpBehaviour
                         case LocalBoatStates.Idle:
                             //No change
                             break;
-                        case LocalBoatStates.Driven:
-                            LocalPhysicsActive = false;
-                            PlatformActiveForMovement = false;
-                            EngineActive = false;
-                            break;
-                        case LocalBoatStates.Towed:
+                        case LocalBoatStates.LocallyActive:
                             LocalPhysicsActive = false;
                             PlatformActiveForMovement = false;
                             break;
@@ -299,7 +228,7 @@ public class BoatController : UdonSharpBehaviour
                             break;
                     }
                     break;
-                case LocalBoatStates.Driven:
+                case LocalBoatStates.LocallyActive:
                     switch (localBoatState)
                     {
                         case LocalBoatStates.Idle:
@@ -309,11 +238,8 @@ public class BoatController : UdonSharpBehaviour
                             syncedOwnershipLocked = true;
                             RequestSerialization();
                             break;
-                        case LocalBoatStates.Driven:
+                        case LocalBoatStates.LocallyActive:
                             //No change
-                            break;
-                        case LocalBoatStates.Towed:
-                            //Exception: Should not be reachable
                             break;
                         case LocalBoatStates.NetworkControlled:
                             Networking.SetOwner(localPlayer, gameObject);
@@ -327,6 +253,7 @@ public class BoatController : UdonSharpBehaviour
                             break;
                     }
                     break;
+                /*
                 case LocalBoatStates.Towed:
                     switch (localBoatState)
                     {
@@ -335,7 +262,7 @@ public class BoatController : UdonSharpBehaviour
                             PlatformActiveForMovement = true;
                             syncedOwnershipLocked = true;
                             break;
-                        case LocalBoatStates.Driven:
+                        case LocalBoatStates.LocallyActive:
                             //Exception: Should not be reachable
                             break;
                         case LocalBoatStates.Towed:
@@ -351,21 +278,16 @@ public class BoatController : UdonSharpBehaviour
                             break;
                     }
                     break;
+                */
                 case LocalBoatStates.NetworkControlled:
                     switch (localBoatState)
                     {
                         case LocalBoatStates.Idle:
                             //Normal condition: Not fix needed, continue to default procedure
                             break;
-                        case LocalBoatStates.Driven:
+                        case LocalBoatStates.LocallyActive:
                             //Handle failed race condition:
                             //ToDo: Kick out
-                            PlatformActiveForMovement = syncedPlatformActiveForMovement;
-                            LocalPhysicsActive = false;
-                            break;
-                        case LocalBoatStates.Towed:
-                            //Handle failed race condition:
-                            //ToDo: Disconnect tow
                             PlatformActiveForMovement = syncedPlatformActiveForMovement;
                             LocalPhysicsActive = false;
                             break;
@@ -384,7 +306,7 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
-    public bool TryDriving()
+    public bool IsOrTrySettingLocallyActive()
     {
         //Checks
         switch (localBoatState)
@@ -392,76 +314,42 @@ public class BoatController : UdonSharpBehaviour
             case LocalBoatStates.Idle:
                 //Pass
                 break;
-            case LocalBoatStates.Driven:
-                return false; //Already driving
-            case LocalBoatStates.Towed:
-                return false;
+            case LocalBoatStates.LocallyActive:
+                return true; //Already active
             case LocalBoatStates.NetworkControlled:
                 if (syncedOwnershipLocked) return false;
+                //Pass
                 break;
             default:
                 break;
         }
 
         //Enable towing
-        LocalBoatState = LocalBoatStates.Driven;
+        LocalBoatState = LocalBoatStates.LocallyActive;
 
         //Return state
         return true;
     }
 
-    public void StopDriving()
+    public void SetLocalInactive()
     {
         //Checks
         switch (localBoatState)
         {
             case LocalBoatStates.Idle:
-                //Already not driving
+                //Ignore since already not driving
                 return;
-            case LocalBoatStates.Driven:
+            case LocalBoatStates.LocallyActive:
                 //pass
                 break;
-            case LocalBoatStates.Towed:
-                return;
             case LocalBoatStates.NetworkControlled:
+                //Ignore since remotely controlled
                 return;
             default:
                 break;
         }
 
         LocalBoatState = LocalBoatStates.Idle;
-    }
-
-    public bool TryEnableTowing()
-    {
-        //Checks
-        switch (localBoatState)
-        {
-            case LocalBoatStates.Idle:
-                //Pass
-                break;
-            case LocalBoatStates.Driven:
-                return false;
-            case LocalBoatStates.Towed:
-                return false;
-            case LocalBoatStates.NetworkControlled:
-                if(syncedOwnershipLocked) return false;
-                break;
-            default:
-                break;
-        }
-
-        //Enable towing
-        LocalBoatState = LocalBoatStates.Towed;
-
-        //Return state
-        return true;
-    }
-
-    void SetIndicators()
-    {
-        if (wheel) wheel.InputValue = syncedInputs.x;
-        if (throttleIndicator) throttleIndicator.InputValue = syncedInputs.y;
     }
 
     static Vector2 GetSmoothInputs()
@@ -491,37 +379,10 @@ public class BoatController : UdonSharpBehaviour
         return returnValue;
     }
 
-    static Vector2 GetSquareInput()
-    {
-        //Source: https://github.com/Sacchan-VRC/SaccFlightAndVehicles/blob/b04482a48c808d8e13524ce6711a7853e4d7afda/Scripts/SaccAirVehicle/SaccAirVehicle.cs#L1140
-        Vector2 inputValue = new Vector2(
-            Input.GetAxis("Oculus_GearVR_LThumbstickX"),
-            Input.GetAxis("Oculus_GearVR_LThumbstickY"));
-
-        inputValue = Mathf.Clamp01(inputValue.magnitude) * inputValue.normalized; //Magnitude can apparently somehow be larger than 1
-
-        if (Mathf.Abs(inputValue.x) > Mathf.Abs(inputValue.y))
-        {
-            if (Mathf.Abs(inputValue.x) > 0)
-            {
-                float temp = inputValue.magnitude / Mathf.Abs(inputValue.x);
-                inputValue = temp * inputValue;
-            }
-        }
-        else if (Mathf.Abs(inputValue.y) > 0)
-        {
-            float temp = inputValue.magnitude / Mathf.Abs(inputValue.y);
-            inputValue = temp * inputValue;
-        }
-
-        return inputValue;
-    }
-
-
     //Events
     void Start()
     {
-        soundAvailable = (startupSound && startupSound.clip && runningSound && runningSound.clip && shutdownSound && shutdownSound.clip);
+        
 
         localPlayer = Networking.LocalPlayer;
         isInVR = localPlayer.IsUserInVR();
@@ -535,6 +396,8 @@ public class BoatController : UdonSharpBehaviour
         linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
 
         localBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.Idle : LocalBoatStates.NetworkControlled;
+
+        linkedDriveSystem.Setup();
 
         /*
         dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
@@ -551,105 +414,17 @@ public class BoatController : UdonSharpBehaviour
         {
             case LocalBoatStates.Idle:
                 break;
-            case LocalBoatStates.Driven:
+            case LocalBoatStates.LocallyActive:
                 if (Time.timeSinceLevelLoad > nextSerializationTime)
                 {
                     RequestSerialization();
                 }
-
-                //Get inputs
-                if (!isInVR)
-                {
-                    if (Input.GetKeyDown(KeyCode.W))
-                    {
-                        syncedInputs.y = 1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.W))
-                    {
-                        syncedInputs.y = 0;
-                        inputActive = false;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.S))
-                    {
-                        syncedInputs.y = -1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.S))
-                    {
-                        syncedInputs.y = 0;
-                        inputActive = false;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.A))
-                    {
-                        syncedInputs.x = -1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.A))
-                    {
-                        syncedInputs.x = 0;
-                        inputActive = false;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.D))
-                    {
-                        syncedInputs.x = 1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.D))
-                    {
-                        syncedInputs.x = 0;
-                        inputActive = false;
-                    }
-
-                    if (!inputActive)
-                    {
-                        Vector2 controllerInput = GetSquareInput();
-
-                        if (controllerInput.magnitude < 0.1f)
-                        {
-                            //Include Shift Ctrl Q E
-                            Vector2 smoothInputs = GetSmoothInputs();
-
-                            syncedInputs.x = Mathf.Clamp(syncedInputs.x + smoothInputs.x, -1, 1);
-                            syncedInputs.y = Mathf.Clamp(syncedInputs.y + smoothInputs.y, -1, 1);
-                        }
-                        else syncedInputs = controllerInput;
-                    }
-                }
-                else
-                {
-                    syncedInputs = GetSquareInput();
-                }
-
-                currentHorizontalSteeringAngle = -syncedInputs.x * maxRudderDeflectionAngle;
-
-                thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
-
-                modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
-
-                if (syncedEngineActive)
-                {
-                    SetIndicators();
-                    UpdateSound();
-                }
-                break;
-            case LocalBoatStates.Towed:
                 break;
             case LocalBoatStates.NetworkControlled:
-                if (syncedEngineActive)
-                {
-                    SetIndicators();
-                    UpdateSound();
-                }
                 break;
             default:
                 break;
         }
-
-        
 
         //Bow emitteres;
         /*
@@ -701,21 +476,7 @@ public class BoatController : UdonSharpBehaviour
         {
             case LocalBoatStates.Idle:
                 break;
-            case LocalBoatStates.Driven:
-
-                if (thruster.transform.position.y < 0) //ToDo: Implement wave function
-                {
-                    currentThrust = syncedInputs.y * thrust * thruster.forward;
-
-                    linkedRigidbody.AddForceAtPosition(currentThrust, thruster.position);
-                }
-                else
-                {
-                    //ToDo: Modify sound
-                }
-                CalculateAndApplyDrag();
-                break;
-            case LocalBoatStates.Towed:
+            case LocalBoatStates.LocallyActive:
                 CalculateAndApplyDrag();
                 break;
             case LocalBoatStates.NetworkControlled:
@@ -732,14 +493,12 @@ public class BoatController : UdonSharpBehaviour
 
     public override void OnDeserialization()
     {
-        EngineActive = syncedEngineActive;
-
         PlatformActiveForMovement = syncedPlatformActiveForMovement;
     }
 
     public void LocalPlayerEntered()
     {
-        bool entryWorked = TryDriving();
+        bool entryWorked = IsOrTrySettingLocallyActive();
 
         if (!entryWorked)
         {
@@ -749,7 +508,7 @@ public class BoatController : UdonSharpBehaviour
 
     public void LocalPlayerExited()
     {
-        StopDriving();
+        SetLocalInactive();
     }
 
     public override void OnOwnershipTransferred(VRCPlayerApi player)
@@ -763,10 +522,7 @@ public class BoatController : UdonSharpBehaviour
                 case LocalBoatStates.Idle:
                     //No change, assumed discard
                     break;
-                case LocalBoatStates.Driven:
-                    //No change, assumed discard
-                    break;
-                case LocalBoatStates.Towed:
+                case LocalBoatStates.LocallyActive:
                     //No change, assumed discard
                     break;
                 case LocalBoatStates.NetworkControlled:
@@ -785,18 +541,7 @@ public class BoatController : UdonSharpBehaviour
                     //Normal behavior
                     LocalBoatState = LocalBoatStates.NetworkControlled;
                     break;
-                case LocalBoatStates.Driven:
-                    //Handle race condition:
-                    if (LocalPlayerHasPriority(player))
-                    {
-                        Networking.SetOwner(localPlayer, gameObject); //Reestablish ownership
-                    }
-                    else
-                    {
-                        LocalBoatState = LocalBoatStates.NetworkControlled; //Handle corner case in state
-                    }
-                    break;
-                case LocalBoatStates.Towed:
+                case LocalBoatStates.LocallyActive:
                     //Handle race condition:
                     if (LocalPlayerHasPriority(player))
                     {

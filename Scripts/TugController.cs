@@ -58,7 +58,7 @@ public class TugController : UdonSharpBehaviour
 
     void AttachRope(TugAttachmentPoint attachmentPoint)
     {
-        if(!attachmentPoint.LinkedBoatController.TryEnableTowing()) return;
+        if(!attachmentPoint.LinkedBoatController.IsOrTrySettingLocallyActive()) return;
         
         transform.parent = attachmentPoint.transform;
         transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
