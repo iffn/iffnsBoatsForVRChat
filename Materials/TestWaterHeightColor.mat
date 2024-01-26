@@ -76,11 +76,12 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TimeScale: 2
+    - _TimeScale: 1
     - _UVSec: 0
-    - _WaveScale: 0.5
+    - _WaveHeight: 1
+    - _WaveScale: 0.25
     - _ZWrite: 1
-    - __dirty: 1
+    - __dirty: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color0: {r: 0, g: 0.218298, b: 1, a: 1}

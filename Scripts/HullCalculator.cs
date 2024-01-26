@@ -713,7 +713,7 @@ public class HullCalculator : UdonSharpBehaviour
         }
     }
 
-    float GetDistanceToWater(Vector3 positionGlobal)
+    public float GetDistanceToWater(Vector3 positionGlobal)
     {
         //return positionGlobal.y; //Simple: Calm water at 0
         return positionGlobal.y - GetWaterHeightAtPosition(cameraHolderAtSeaLevel.InverseTransformPoint(positionGlobal));
