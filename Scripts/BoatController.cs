@@ -21,30 +21,29 @@ public class BoatController : UdonSharpBehaviour
     Purpose:
     - Manage interaction beteen boat physics player collider
     - Manage ownership
-    - Manage inputs -- No longer
-    - Manage steering forces -- No longer
-    - Manage indicators -- No longer
-    - Manage sounds -- No longer
     - Manage visual effects
     */
     
     [UdonSynced] bool syncedPlatformActiveForMovement = false;
     [UdonSynced] bool syncedOwnershipLocked = false;
+    [UdonSynced] float syncedEnginevalue;
     
     //Unity assignments
     [Header("Behavior parameters")]
     [SerializeField] Vector3 dragCoefficientsWithDensity = new Vector3(1000, 1000, 50);
 
-    [Header("Linked components")]
-    [SerializeField] BoatDriveSystem linkedDriveSystem;
+    [Header("Boat specific components")]
     [SerializeField] MeshFilter calculationMesh;
-    [SerializeField] Rigidbody linkedRigidbody;
-    [SerializeField] HullCalculator linkedHullCalculator;
     [SerializeField] Transform modelHolder;
     [SerializeField] Transform externalTeleportTarget;
     [SerializeField] Collider boatCollider;
     [SerializeField] ParticleSystem[] BowEmitters;
     [SerializeField] PlayerColliderController linkedPlayerColliderCanBeNull;
+
+    [Header("Consistent components")]
+    [SerializeField] BoatDriveSystem linkedDriveSystem;
+    [SerializeField] Rigidbody linkedRigidbody;
+    [SerializeField] HullCalculator linkedHullCalculator;
     
     public string[] DebugText
     {
@@ -85,17 +84,16 @@ public class BoatController : UdonSharpBehaviour
     //Fixed parameters
     Transform rigidBodyTransform;
     VRCPlayerApi localPlayer;
-    readonly float timeBetweenSerializations = 1f / 6f;
-    readonly int defaultLayer = 0;
-    //readonly int pickupLayer = 13;
-    readonly int mirrorReflectionLayer = 18;
     VRCObjectSync linkedObjectSync;
-    
+    readonly float timeBetweenSerializations = 1f / 6f;
+    public const int defaultLayer = 0;
+    public const int pickupLayer = 13;
+    public const int mirrorReflectionLayer = 18;
+    bool isInVR;
 
     //Runtime parameters
     public LocalBoatStates localBoatState = LocalBoatStates.Idle;
-    bool enginePreviouslyActive = false;
-    float startupRamp = 0.5f;
+    
     float nextSerializationTime;
     
 
@@ -160,8 +158,6 @@ public class BoatController : UdonSharpBehaviour
 
         modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
     }
-
-    
 
     bool LocalPhysicsActive
     {
@@ -234,7 +230,6 @@ public class BoatController : UdonSharpBehaviour
                         case LocalBoatStates.Idle:
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
-                            EngineActive = true;
                             syncedOwnershipLocked = true;
                             RequestSerialization();
                             break;
@@ -245,7 +240,6 @@ public class BoatController : UdonSharpBehaviour
                             Networking.SetOwner(localPlayer, gameObject);
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
-                            EngineActive = true;
                             syncedOwnershipLocked = true;
                             RequestSerialization();
                             break;
@@ -352,38 +346,10 @@ public class BoatController : UdonSharpBehaviour
         LocalBoatState = LocalBoatStates.Idle;
     }
 
-    static Vector2 GetSmoothInputs()
-    {
-        Vector2 returnValue = Vector2.zero;
-
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            returnValue.y += Time.deltaTime;
-        }
-
-        if (Input.GetKey(KeyCode.LeftControl))
-        {
-            returnValue.y -= Time.deltaTime;
-        }
-
-        if (Input.GetKey(KeyCode.Q))
-        {
-            returnValue.x -= Time.deltaTime;
-        }
-
-        if (Input.GetKey(KeyCode.E))
-        {
-            returnValue.x += Time.deltaTime;
-        }
-
-        return returnValue;
-    }
 
     //Events
     void Start()
     {
-        
-
         localPlayer = Networking.LocalPlayer;
         isInVR = localPlayer.IsUserInVR();
 
@@ -447,8 +413,8 @@ public class BoatController : UdonSharpBehaviour
     public Vector3 dragForceDebug;
     public Vector3 dragAreaDebug;
 #endif
-
-    void CalculateAndApplyDrag()
+    
+    void CalculateAndApplyDrag() //ToDo: Move to hull calculator
     {
         Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
 
@@ -494,6 +460,11 @@ public class BoatController : UdonSharpBehaviour
     public override void OnDeserialization()
     {
         PlatformActiveForMovement = syncedPlatformActiveForMovement;
+    }
+
+    public void SyncInputs(float syncedEnginevalue)
+    {
+        this.syncedEnginevalue = syncedEnginevalue;
     }
 
     public void LocalPlayerEntered()

@@ -14,8 +14,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
     - Manage sounds
     */
 
-    [UdonSynced] Vector2 syncedInputs = Vector2.zero;
-    [UdonSynced] bool syncedEngineActive = false;
+    Vector2 inputs = Vector2.zero;
 
     [Header("Behavior parameters")]
     [SerializeField] float thrust = 10000;
@@ -42,6 +41,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     Vector3 currentThrust;
     float currentHorizontalSteeringAngle = 0;
     bool inputActive = false;
+    float startupRamp = 0.5f;
+    bool enginePreviouslyActive = false;
 
     public string[] DebugText
     {
@@ -57,10 +58,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 $"Constraints: {linkedRigidbody.constraints}",
                 $"IsSleeping: {linkedRigidbody.IsSleeping()}",
                 $"IsKinematic: {linkedRigidbody.isKinematic}",
-                $"{nameof(syncedInputs)}: {syncedInputs}",
-                $"{nameof(syncedPlatformActiveForMovement)}: {syncedPlatformActiveForMovement}",
-                $"{nameof(syncedOwnershipLocked)}: {syncedOwnershipLocked}",
-                $"{nameof(syncedEngineActive)}: {syncedEngineActive}",
+                $"{nameof(inputs)}: {inputs}",
                 $"{nameof(localBoatState)}: {localBoatState}",
             };
 
@@ -71,27 +69,44 @@ public class BoatDriveSystem : UdonSharpBehaviour
     public bool CheckAssignments()
     {
         if (thruster == null) return false;
-        if (calculationMesh == null) return false;
         if (linkedRigidbody == null) return false;
-        if (LinkedHullCalculator == null) return false;
-        if (modelHolder == null) return false;
-        if (externalTeleportTarget == null) return false;
         if (driverStation == null) return false;
         if (wheel == null) return false;
         if (throttleIndicator == null) return false;
-        if (boatCollider == null) return false;
-        if (LinkedPlayerColliderControllerCanBeNull == null) return false;
         if (startupSound == null) return false;
         if (runningSound == null) return false;
         if (shutdownSound == null) return false;
 
         return true;
     }
+    
+    bool EngineActiveNotImplementedCorrectl
+    {
+        get
+        {
+            return inputs.y > -Mathf.Infinity;
+        }
+        set
+        {
+            if (value)
+            {
+                if (!enginePreviouslyActive) StartSound();
+                inputs.y = Mathf.Clamp(inputs.y, -1, 1);
+            }
+            else
+            {
+                if (enginePreviouslyActive) StopSound();
+                inputs.y = -Mathf.Infinity;
+            }
+
+            enginePreviouslyActive = value;
+        }
+    }
 
     void SetIndicators()
     {
-        if (wheel) wheel.InputValue = syncedInputs.x;
-        if (throttleIndicator) throttleIndicator.InputValue = syncedInputs.y;
+        if (wheel) wheel.InputValue = inputs.x;
+        if (throttleIndicator) throttleIndicator.InputValue = inputs.y;
     }
 
     void StartSound()
@@ -110,8 +125,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
         startupRamp += Mathf.Clamp01(Time.deltaTime / startupSound.clip.length);
 
-        runningSound.pitch = Mathf.Abs(syncedInputs.y) + 1;
-        runningSound.volume = (Mathf.Abs(syncedInputs.y) * 0.5f + 0.5f) * startupRamp;
+        runningSound.pitch = Mathf.Abs(inputs.y) + 1;
+        runningSound.volume = (Mathf.Abs(inputs.y) * 0.5f + 0.5f) * startupRamp;
     }
 
     void StopSound()
@@ -120,23 +135,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
         runningSound.Stop();
         shutdownSound.Play();
-    }
-
-    bool EngineActive
-    {
-        set
-        {
-            if (value)
-            {
-                if (!enginePreviouslyActive) StartSound();
-            }
-            else
-            {
-                if (enginePreviouslyActive) StopSound();
-            }
-
-            enginePreviouslyActive = value;
-        }
     }
 
     public void Setup()
@@ -150,6 +148,33 @@ public class BoatDriveSystem : UdonSharpBehaviour
     public void TryActivating()
     {
 
+    }
+
+    static Vector2 GetSmoothInputs()
+    {
+        Vector2 returnValue = Vector2.zero;
+
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            returnValue.y += Time.deltaTime;
+        }
+
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            returnValue.y -= Time.deltaTime;
+        }
+
+        if (Input.GetKey(KeyCode.Q))
+        {
+            returnValue.x -= Time.deltaTime;
+        }
+
+        if (Input.GetKey(KeyCode.E))
+        {
+            returnValue.x += Time.deltaTime;
+        }
+
+        return returnValue;
     }
 
     static Vector2 GetSquareInput()
@@ -178,6 +203,68 @@ public class BoatDriveSystem : UdonSharpBehaviour
         return inputValue;
     }
 
+    void GatherDirectInputs()
+    {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            inputs.y = 1;
+            inputActive = true;
+        }
+        else if (Input.GetKeyUp(KeyCode.W))
+        {
+            inputs.y = 0;
+            inputActive = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            inputs.y = -1;
+            inputActive = true;
+        }
+        else if (Input.GetKeyUp(KeyCode.S))
+        {
+            inputs.y = 0;
+            inputActive = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            inputs.x = -1;
+            inputActive = true;
+        }
+        else if (Input.GetKeyUp(KeyCode.A))
+        {
+            inputs.x = 0;
+            inputActive = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            inputs.x = 1;
+            inputActive = true;
+        }
+        else if (Input.GetKeyUp(KeyCode.D))
+        {
+            inputs.x = 0;
+            inputActive = false;
+        }
+
+        if (!inputActive)
+        {
+            Vector2 controllerInput = GetSquareInput();
+
+            if (controllerInput.magnitude < 0.1f)
+            {
+                //Include Shift Ctrl Q E
+                Vector2 smoothInputs = GetSmoothInputs();
+
+                inputs.x = Mathf.Clamp(inputs.x + smoothInputs.x, -1, 1);
+                inputs.y = Mathf.Clamp(inputs.y + smoothInputs.y, -1, 1);
+            }
+            else inputs = controllerInput;
+        }
+    }
+
     private void Update()
     {
         switch (localBoatState)
@@ -185,92 +272,31 @@ public class BoatDriveSystem : UdonSharpBehaviour
             case LocalBoatStates.Idle:
                 break;
             case LocalBoatStates.LocallyActive:
-                if (Time.timeSinceLevelLoad > nextSerializationTime)
-                {
-                    RequestSerialization();
-                }
-
                 //Get inputs
                 if (!isInVR)
                 {
-                    if (Input.GetKeyDown(KeyCode.W))
-                    {
-                        syncedInputs.y = 1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.W))
-                    {
-                        syncedInputs.y = 0;
-                        inputActive = false;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.S))
-                    {
-                        syncedInputs.y = -1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.S))
-                    {
-                        syncedInputs.y = 0;
-                        inputActive = false;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.A))
-                    {
-                        syncedInputs.x = -1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.A))
-                    {
-                        syncedInputs.x = 0;
-                        inputActive = false;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.D))
-                    {
-                        syncedInputs.x = 1;
-                        inputActive = true;
-                    }
-                    else if (Input.GetKeyUp(KeyCode.D))
-                    {
-                        syncedInputs.x = 0;
-                        inputActive = false;
-                    }
-
-                    if (!inputActive)
-                    {
-                        Vector2 controllerInput = GetSquareInput();
-
-                        if (controllerInput.magnitude < 0.1f)
-                        {
-                            //Include Shift Ctrl Q E
-                            Vector2 smoothInputs = GetSmoothInputs();
-
-                            syncedInputs.x = Mathf.Clamp(syncedInputs.x + smoothInputs.x, -1, 1);
-                            syncedInputs.y = Mathf.Clamp(syncedInputs.y + smoothInputs.y, -1, 1);
-                        }
-                        else syncedInputs = controllerInput;
-                    }
+                    GatherDirectInputs();
                 }
                 else
                 {
-                    syncedInputs = GetSquareInput();
+                    inputs = GetSquareInput();
                 }
 
-                currentHorizontalSteeringAngle = -syncedInputs.x * maxRudderDeflectionAngle;
+                currentHorizontalSteeringAngle = -inputs.x * maxRudderDeflectionAngle;
 
                 thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
 
-                modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
-
-                if (syncedEngineActive)
+                if (EngineActive)
                 {
                     SetIndicators();
                     UpdateSound();
                 }
+
+                linkedBoatController.SyncInputs(inputs.y);
+
                 break;
             case LocalBoatStates.NetworkControlled:
-                if (syncedEngineActive)
+                if (EngineActive)
                 {
                     SetIndicators();
                     UpdateSound();
@@ -291,7 +317,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
                 if (thruster.transform.position.y < 0) //ToDo: Implement wave function
                 {
-                    currentThrust = syncedInputs.y * thrust * thruster.forward;
+                    currentThrust = inputs.y * thrust * thruster.forward;
 
                     linkedRigidbody.AddForceAtPosition(currentThrust, thruster.position);
                 }
@@ -307,8 +333,4 @@ public class BoatDriveSystem : UdonSharpBehaviour
         }
     }
 
-    public override void OnDeserialization()
-    {
-        EngineActive = syncedEngineActive;
-    }
 }
