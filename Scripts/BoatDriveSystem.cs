@@ -14,7 +14,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
     - Manage sounds
     */
 
-    Vector2 inputs = Vector2.zero;
 
     [Header("Behavior parameters")]
     [SerializeField] float thrust = 10000;
@@ -35,14 +34,16 @@ public class BoatDriveSystem : UdonSharpBehaviour
     Rigidbody linkedRigidbody;
     bool soundAvailable;
     bool isInVR;
+    const float engineDisabledValue = -Mathf.Infinity;
 
     //Runtime parameters
-    public LocalBoatStates localBoatState;
+    LocalBoatStates localBoatState;
     Vector3 currentThrust;
     float currentHorizontalSteeringAngle = 0;
     bool inputActive = false;
     float startupRamp = 0.5f;
     bool enginePreviouslyActive = false;
+    Vector2 inputs = Vector2.zero;
 
     public string[] DebugText
     {
@@ -79,8 +80,37 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
         return true;
     }
-    
-    bool EngineActiveNotImplementedCorrectl
+
+    public LocalBoatStates LocalBoatState
+    {
+        set
+        {
+            switch (value)
+            {
+                case LocalBoatStates.Idle:
+                    if (localBoatState == LocalBoatStates.LocallyActive)
+                    {
+                        StopSound();
+                    }
+                    break;
+                case LocalBoatStates.LocallyActive:
+                    inputs = Vector2.zero;
+                    if(localBoatState == LocalBoatStates.Idle)
+                    {
+                        StartSound();
+                    }
+                    break;
+                case LocalBoatStates.NetworkControlled:
+                    break;
+                default:
+                    break;
+            }
+
+            localBoatState = value;
+        }
+    }
+
+    bool EngineActiveNotImplementedCorrectly
     {
         get
         {
@@ -119,14 +149,29 @@ public class BoatDriveSystem : UdonSharpBehaviour
         startupRamp = 0;
     }
 
-    void UpdateSound()
+    void UpdateContinousSound()
     {
         if (!soundAvailable) return;
+
+        if(inputs.y == -Mathf.Infinity) return;
 
         startupRamp += Mathf.Clamp01(Time.deltaTime / startupSound.clip.length);
 
         runningSound.pitch = Mathf.Abs(inputs.y) + 1;
         runningSound.volume = (Mathf.Abs(inputs.y) * 0.5f + 0.5f) * startupRamp;
+    }
+
+    void CheckRemoteSound()
+    {
+        bool engineNowActive = inputs.y != engineDisabledValue;
+
+        if (engineNowActive != enginePreviouslyActive)
+        {
+            if (engineNowActive) StartSound();
+            else StopSound();
+
+            enginePreviouslyActive = engineNowActive;
+        }
     }
 
     void StopSound()
@@ -139,6 +184,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     public void Setup()
     {
+        isInVR = Networking.LocalPlayer.IsUserInVR();
+
         linkedRigidbody = linkedBoatController.LinkedRigidbody;
         if (!linkedRigidbody) Debug.LogWarning("Error: linked boat controller does not seem to have the Rigidbody assigned");
 
@@ -265,6 +312,11 @@ public class BoatDriveSystem : UdonSharpBehaviour
         }
     }
 
+    void GetRemoteValues()
+    {
+        inputs = linkedBoatController.SyncedInputs;
+    }
+
     private void Update()
     {
         switch (localBoatState)
@@ -286,26 +338,25 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
                 thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
 
-                if (EngineActive)
-                {
-                    SetIndicators();
-                    UpdateSound();
-                }
+                SetIndicators();
+                UpdateContinousSound();
 
-                linkedBoatController.SyncInputs(inputs.y);
+                linkedBoatController.SyncDriveValues(inputs);
 
                 break;
             case LocalBoatStates.NetworkControlled:
-                if (EngineActive)
-                {
-                    SetIndicators();
-                    UpdateSound();
-                }
+                GetRemoteValues();
+                SetIndicators();
+                UpdateContinousSound();
+                CheckRemoteSound();
                 break;
             default:
                 break;
         }
     }
+
+
+
 
     void FixedUpdate()
     {

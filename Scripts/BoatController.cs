@@ -19,14 +19,16 @@ public class BoatController : UdonSharpBehaviour
 {
     /*
     Purpose:
-    - Manage interaction beteen boat physics player collider
     - Manage ownership
+    - Manage interaction beteen boat physics player collider
+    - Collider states
+    - Platform movement
     - Manage visual effects
     */
     
     [UdonSynced] bool syncedPlatformActiveForMovement = false;
     [UdonSynced] bool syncedOwnershipLocked = false;
-    [UdonSynced] float syncedEnginevalue;
+    [UdonSynced] Vector2 syncedInputs;
     
     //Unity assignments
     [Header("Behavior parameters")]
@@ -113,6 +115,14 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
+    public Vector2 SyncedInputs
+    {
+        get
+        {
+            return syncedInputs;
+        }
+    }
+
     public Transform ExternalTeleportTarget
     {
         get
@@ -182,7 +192,7 @@ public class BoatController : UdonSharpBehaviour
             }
 
             //Calculation
-            linkedHullCalculator.disablePhysics = !value;
+            linkedHullCalculator.physicsActive = value;
         }
     }
 
@@ -237,6 +247,11 @@ public class BoatController : UdonSharpBehaviour
                             //No change
                             break;
                         case LocalBoatStates.NetworkControlled:
+                            if (syncedOwnershipLocked)
+                            {
+                                value = LocalBoatStates.NetworkControlled;
+                                break;
+                            }
                             Networking.SetOwner(localPlayer, gameObject);
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
@@ -295,8 +310,8 @@ public class BoatController : UdonSharpBehaviour
                 default:
                     break;
             }
-
             localBoatState = value; //Only switch at the end for previous state
+            linkedDriveSystem.LocalBoatState = localBoatState;
         }
     }
 
@@ -462,9 +477,9 @@ public class BoatController : UdonSharpBehaviour
         PlatformActiveForMovement = syncedPlatformActiveForMovement;
     }
 
-    public void SyncInputs(float syncedEnginevalue)
+    public void SyncDriveValues(Vector2 inputs)
     {
-        this.syncedEnginevalue = syncedEnginevalue;
+        this.syncedInputs = inputs;
     }
 
     public void LocalPlayerEntered()

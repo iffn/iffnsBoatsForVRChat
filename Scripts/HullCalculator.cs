@@ -62,7 +62,7 @@ public class HullCalculator : UdonSharpBehaviour
 
     public float timeMs;
 
-    public bool disablePhysics = true;
+    public bool physicsActive = false;
 
     //Physics
     float waterDensity = 1000f;
@@ -195,7 +195,7 @@ public class HullCalculator : UdonSharpBehaviour
         debugVelocity = linkedRigidbody.velocity.magnitude;
 #endif
 
-        if (disablePhysics) return;
+        if (!physicsActive) return;
 
         GenerateCalculationMeshes();
 
