@@ -155,7 +155,7 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
-    //Functions
+    //Functio ns
     bool LocalPlayerHasPriority(VRCPlayerApi remotePlayer)
     {
         return localPlayer.playerId < remotePlayer.playerId;
@@ -378,7 +378,7 @@ public class BoatController : UdonSharpBehaviour
 
         localBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.Idle : LocalBoatStates.NetworkControlled;
 
-        linkedDriveSystem.Setup();
+        linkedDriveSystem.Setup(this);
 
         /*
         dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
@@ -391,6 +391,19 @@ public class BoatController : UdonSharpBehaviour
 
     void Update()
     {
+        /*
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            LocalBoatState = LocalBoatStates.LocallyActive;
+            Debug.Log("Active");
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            LocalBoatState = LocalBoatStates.Idle;
+            Debug.Log("Idle");
+        }
+        */
+
         switch (localBoatState)
         {
             case LocalBoatStates.Idle:

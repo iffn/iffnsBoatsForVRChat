@@ -20,12 +20,11 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] float maxRudderDeflectionAngle = 20;
 
     [Header("Linked components")]
-    [SerializeField] BoatController linkedBoatController;
+    BoatController linkedBoatController;
     [SerializeField] Transform thruster;
     [SerializeField] AudioSource startupSound;
     [SerializeField] AudioSource runningSound;
     [SerializeField] AudioSource shutdownSound;
-    [SerializeField] StationManager driverStation;
     [SerializeField] Indicator wheel;
     [SerializeField] Indicator throttleIndicator;
 
@@ -71,7 +70,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
     {
         if (thruster == null) return false;
         if (linkedRigidbody == null) return false;
-        if (driverStation == null) return false;
         if (wheel == null) return false;
         if (throttleIndicator == null) return false;
         if (startupSound == null) return false;
@@ -182,8 +180,10 @@ public class BoatDriveSystem : UdonSharpBehaviour
         shutdownSound.Play();
     }
 
-    public void Setup()
+    public void Setup(BoatController linkedBoatController)
     {
+        this.linkedBoatController = linkedBoatController;
+
         isInVR = Networking.LocalPlayer.IsUserInVR();
 
         linkedRigidbody = linkedBoatController.LinkedRigidbody;
