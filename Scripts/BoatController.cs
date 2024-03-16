@@ -10,8 +10,8 @@ using VRC.Udon.Common;
 
 public enum LocalBoatStates
 {
-    Idle,
-    LocallyActive,
+    IdleAsOwner,
+    ActiveAsOwner,
     NetworkControlled
 }
 
@@ -94,7 +94,7 @@ public class BoatController : UdonSharpBehaviour
     bool isInVR;
 
     //Runtime parameters
-    public LocalBoatStates localBoatState = LocalBoatStates.Idle;
+    public LocalBoatStates localBoatState = LocalBoatStates.IdleAsOwner;
     
     float nextSerializationTime;
     
@@ -216,13 +216,13 @@ public class BoatController : UdonSharpBehaviour
         {
             switch (value)
             {
-                case LocalBoatStates.Idle:
+                case LocalBoatStates.IdleAsOwner:
                     switch (localBoatState)
                     {
-                        case LocalBoatStates.Idle:
+                        case LocalBoatStates.IdleAsOwner:
                             //No change
                             break;
-                        case LocalBoatStates.LocallyActive:
+                        case LocalBoatStates.ActiveAsOwner:
                             LocalPhysicsActive = false;
                             PlatformActiveForMovement = false;
                             break;
@@ -234,16 +234,16 @@ public class BoatController : UdonSharpBehaviour
                             break;
                     }
                     break;
-                case LocalBoatStates.LocallyActive:
+                case LocalBoatStates.ActiveAsOwner:
                     switch (localBoatState)
                     {
-                        case LocalBoatStates.Idle:
+                        case LocalBoatStates.IdleAsOwner:
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
                             syncedOwnershipLocked = true;
                             RequestSerialization();
                             break;
-                        case LocalBoatStates.LocallyActive:
+                        case LocalBoatStates.ActiveAsOwner:
                             //No change
                             break;
                         case LocalBoatStates.NetworkControlled:
@@ -291,10 +291,10 @@ public class BoatController : UdonSharpBehaviour
                 case LocalBoatStates.NetworkControlled:
                     switch (localBoatState)
                     {
-                        case LocalBoatStates.Idle:
+                        case LocalBoatStates.IdleAsOwner:
                             //Normal condition: Not fix needed, continue to default procedure
                             break;
-                        case LocalBoatStates.LocallyActive:
+                        case LocalBoatStates.ActiveAsOwner:
                             //Handle failed race condition:
                             //ToDo: Kick out
                             PlatformActiveForMovement = syncedPlatformActiveForMovement;
@@ -320,10 +320,10 @@ public class BoatController : UdonSharpBehaviour
         //Checks
         switch (localBoatState)
         {
-            case LocalBoatStates.Idle:
+            case LocalBoatStates.IdleAsOwner:
                 //Pass
                 break;
-            case LocalBoatStates.LocallyActive:
+            case LocalBoatStates.ActiveAsOwner:
                 return true; //Already active
             case LocalBoatStates.NetworkControlled:
                 if (syncedOwnershipLocked) return false;
@@ -334,7 +334,7 @@ public class BoatController : UdonSharpBehaviour
         }
 
         //Enable towing
-        LocalBoatState = LocalBoatStates.LocallyActive;
+        LocalBoatState = LocalBoatStates.ActiveAsOwner;
 
         //Return state
         return true;
@@ -345,10 +345,10 @@ public class BoatController : UdonSharpBehaviour
         //Checks
         switch (localBoatState)
         {
-            case LocalBoatStates.Idle:
+            case LocalBoatStates.IdleAsOwner:
                 //Ignore since already not driving
                 return;
-            case LocalBoatStates.LocallyActive:
+            case LocalBoatStates.ActiveAsOwner:
                 //pass
                 break;
             case LocalBoatStates.NetworkControlled:
@@ -358,7 +358,7 @@ public class BoatController : UdonSharpBehaviour
                 break;
         }
 
-        LocalBoatState = LocalBoatStates.Idle;
+        LocalBoatState = LocalBoatStates.IdleAsOwner;
     }
 
 
@@ -376,7 +376,7 @@ public class BoatController : UdonSharpBehaviour
 
         linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
 
-        localBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.Idle : LocalBoatStates.NetworkControlled;
+        localBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.IdleAsOwner : LocalBoatStates.NetworkControlled;
 
         linkedDriveSystem.Setup(this);
 
@@ -406,9 +406,9 @@ public class BoatController : UdonSharpBehaviour
 
         switch (localBoatState)
         {
-            case LocalBoatStates.Idle:
+            case LocalBoatStates.IdleAsOwner:
                 break;
-            case LocalBoatStates.LocallyActive:
+            case LocalBoatStates.ActiveAsOwner:
                 if (Time.timeSinceLevelLoad > nextSerializationTime)
                 {
                     RequestSerialization();
@@ -468,9 +468,9 @@ public class BoatController : UdonSharpBehaviour
 
         switch (localBoatState)
         {
-            case LocalBoatStates.Idle:
+            case LocalBoatStates.IdleAsOwner:
                 break;
-            case LocalBoatStates.LocallyActive:
+            case LocalBoatStates.ActiveAsOwner:
                 CalculateAndApplyDrag();
                 break;
             case LocalBoatStates.NetworkControlled:
@@ -518,15 +518,15 @@ public class BoatController : UdonSharpBehaviour
         {
             switch (localBoatState)
             {
-                case LocalBoatStates.Idle:
+                case LocalBoatStates.IdleAsOwner:
                     //No change, assumed discard
                     break;
-                case LocalBoatStates.LocallyActive:
+                case LocalBoatStates.ActiveAsOwner:
                     //No change, assumed discard
                     break;
                 case LocalBoatStates.NetworkControlled:
                     //Other player disconnected
-                    LocalBoatState = LocalBoatStates.Idle;
+                    LocalBoatState = LocalBoatStates.IdleAsOwner;
                     break;
                 default:
                     break;
@@ -536,11 +536,11 @@ public class BoatController : UdonSharpBehaviour
         {
             switch (localBoatState)
             {
-                case LocalBoatStates.Idle:
+                case LocalBoatStates.IdleAsOwner:
                     //Normal behavior
                     LocalBoatState = LocalBoatStates.NetworkControlled;
                     break;
-                case LocalBoatStates.LocallyActive:
+                case LocalBoatStates.ActiveAsOwner:
                     //Handle race condition:
                     if (LocalPlayerHasPriority(player))
                     {

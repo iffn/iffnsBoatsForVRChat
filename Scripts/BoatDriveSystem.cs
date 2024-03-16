@@ -85,15 +85,15 @@ public class BoatDriveSystem : UdonSharpBehaviour
         {
             switch (value)
             {
-                case LocalBoatStates.Idle:
-                    if (localBoatState == LocalBoatStates.LocallyActive)
+                case LocalBoatStates.IdleAsOwner:
+                    if (localBoatState == LocalBoatStates.ActiveAsOwner)
                     {
                         StopSound();
                     }
                     break;
-                case LocalBoatStates.LocallyActive:
+                case LocalBoatStates.ActiveAsOwner:
                     inputs = Vector2.zero;
-                    if(localBoatState == LocalBoatStates.Idle)
+                    if(localBoatState == LocalBoatStates.IdleAsOwner)
                     {
                         StartSound();
                     }
@@ -321,9 +321,9 @@ public class BoatDriveSystem : UdonSharpBehaviour
     {
         switch (localBoatState)
         {
-            case LocalBoatStates.Idle:
+            case LocalBoatStates.IdleAsOwner:
                 break;
-            case LocalBoatStates.LocallyActive:
+            case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
                 if (!isInVR)
                 {
@@ -362,9 +362,9 @@ public class BoatDriveSystem : UdonSharpBehaviour
     {
         switch (localBoatState)
         {
-            case LocalBoatStates.Idle:
+            case LocalBoatStates.IdleAsOwner:
                 break;
-            case LocalBoatStates.LocallyActive:
+            case LocalBoatStates.ActiveAsOwner:
 
                 if (thruster.transform.position.y < 0) //ToDo: Implement wave function
                 {
