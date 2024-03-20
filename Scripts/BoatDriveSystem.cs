@@ -1,4 +1,5 @@
 ﻿
+using iffnsStuff.iffnsVRCStuff.InteractionController;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -14,7 +15,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
     - Manage sounds
     */
 
-
     [Header("Behavior parameters")]
     [SerializeField] float thrust = 10000;
     [SerializeField] float maxRudderDeflectionAngle = 20;
@@ -25,9 +25,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] AudioSource startupSound;
     [SerializeField] AudioSource runningSound;
     [SerializeField] AudioSource shutdownSound;
-    [SerializeField] Indicator wheel;
-    [SerializeField] Indicator throttleIndicator;
-
+    [SerializeField] RotationInteractor inputHelm;
+    [SerializeField] LinearSliderInteractor inputThrottle;
 
     //Fixed parameters
     Rigidbody linkedRigidbody;
@@ -70,8 +69,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     {
         if (thruster == null) return false;
         if (linkedRigidbody == null) return false;
-        if (wheel == null) return false;
-        if (throttleIndicator == null) return false;
+        if (inputHelm == null) return false;
+        if (inputThrottle == null) return false;
         if (startupSound == null) return false;
         if (runningSound == null) return false;
         if (shutdownSound == null) return false;
@@ -133,8 +132,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     void SetIndicators()
     {
-        if (wheel) wheel.InputValue = inputs.x;
-        if (throttleIndicator) throttleIndicator.InputValue = inputs.y;
+        if (inputHelm) inputHelm.CurrentAngleDeg = inputs.x * 30f;
+        if (inputThrottle) inputThrottle.CurrentValue = inputs.y;
     }
 
     void StartSound()

@@ -46,7 +46,7 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] BoatDriveSystem linkedDriveSystem;
     [SerializeField] Rigidbody linkedRigidbody;
     [SerializeField] HullCalculator linkedHullCalculator;
-    
+
     public string[] DebugText
     {
         get
