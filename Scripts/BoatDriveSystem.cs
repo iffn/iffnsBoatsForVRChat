@@ -1,9 +1,10 @@
-﻿
+﻿//UdonCompilerStopper
 using iffnsStuff.iffnsVRCStuff.InteractionController;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
+
 
 public class BoatDriveSystem : UdonSharpBehaviour
 {
@@ -25,8 +26,22 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] AudioSource startupSound;
     [SerializeField] AudioSource runningSound;
     [SerializeField] AudioSource shutdownSound;
+
     [SerializeField] RotationInteractor inputHelm;
     [SerializeField] LinearSliderInteractor inputThrottle;
+    [SerializeField] ButtonInteractor respawnButton;
+    [SerializeField] ButtonInteractor ownershipButton;
+    [SerializeField] ButtonInteractor activationButton;
+    [SerializeField] MeshRenderer respawnButtonRenderer;
+    [SerializeField] MeshRenderer ownershipButtonRenderer;
+    [SerializeField] MeshRenderer activationButtonRenderer;
+    [SerializeField] TMPro.TextMeshProUGUI ownershipText;
+    [SerializeField] TMPro.TextMeshProUGUI boatStateText;
+    [SerializeField] Material enabledButtonMaterial;
+    [SerializeField] Material disabledButtonMaterial;
+    [SerializeField] Material inactiveButtonMaterial;
+    [SerializeField] Material activeRespawnButtonMaterial;
+    [SerializeField] Material inactiveRespawnButtonMaterial;
 
     //Fixed parameters
     Rigidbody linkedRigidbody;
@@ -104,6 +119,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
             }
 
             localBoatState = value;
+
+            ButtonState = value;
         }
     }
 
@@ -146,7 +163,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
         startupRamp = 0;
     }
 
-    void UpdateContinousSound()
+    void UpdateContinuousSound()
     {
         if (!soundAvailable) return;
 
@@ -338,7 +355,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
 
                 SetIndicators();
-                UpdateContinousSound();
+                UpdateContinuousSound();
 
                 linkedBoatController.SyncDriveValues(inputs);
 
@@ -346,16 +363,13 @@ public class BoatDriveSystem : UdonSharpBehaviour
             case LocalBoatStates.NetworkControlled:
                 GetRemoteValues();
                 SetIndicators();
-                UpdateContinousSound();
+                UpdateContinuousSound();
                 CheckRemoteSound();
                 break;
             default:
                 break;
         }
     }
-
-
-
 
     void FixedUpdate()
     {
@@ -383,4 +397,81 @@ public class BoatDriveSystem : UdonSharpBehaviour
         }
     }
 
+    LocalBoatStates ButtonState
+    {
+        set
+        {
+            bool isOwner;
+
+            switch (value)
+            {
+                case LocalBoatStates.IdleAsOwner:
+                    isOwner = true;
+                    activationButtonRenderer.sharedMaterial = disabledButtonMaterial;
+                    boatStateText.text = "Boat state: Idle";
+                    break;
+                case LocalBoatStates.ActiveAsOwner:
+                    activationButtonRenderer.sharedMaterial = enabledButtonMaterial;
+                    boatStateText.text = "Boat state: Running";
+                    isOwner = true;
+                    break;
+                case LocalBoatStates.NetworkControlled:
+                    activationButtonRenderer.sharedMaterial = inactiveButtonMaterial;
+                    boatStateText.text = "Boat state: Network controlled";
+                    isOwner = false;
+                    break;
+                default:
+                    isOwner = false;
+                    Debug.LogWarning($"Error: {nameof(LocalBoatStates)} enum state not defined");
+                    break;
+            }
+
+            if (isOwner)
+            {
+                ownershipText.text = $"Current owner:\nYou";
+            }
+            else
+            {
+                ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\n[Click to claim]";
+            }
+
+            respawnButtonRenderer.sharedMaterial = isOwner ? activeRespawnButtonMaterial : inactiveRespawnButtonMaterial;
+            ownershipButtonRenderer.sharedMaterial = isOwner ? enabledButtonMaterial : disabledButtonMaterial;
+
+            respawnButton.InteractionCollidersEnabled = isOwner;
+            activationButton.InteractionCollidersEnabled = isOwner;
+            ownershipButton.InteractionCollidersEnabled = !isOwner;
+        }
+    }
+
+    public void OwnershipButtonPressed()
+    {
+        if(localBoatState == LocalBoatStates.NetworkControlled)
+        {
+            Networking.SetOwner(Networking.LocalPlayer, linkedBoatController.gameObject);
+        }
+    }
+
+    public void ActivationButtonPressed()
+    {
+        switch (localBoatState)
+        {
+            case LocalBoatStates.IdleAsOwner:
+                linkedBoatController.LocalBoatState = LocalBoatStates.ActiveAsOwner;
+                break;
+            case LocalBoatStates.ActiveAsOwner:
+                linkedBoatController.LocalBoatState = LocalBoatStates.IdleAsOwner;
+                break;
+            case LocalBoatStates.NetworkControlled:
+                //Skip
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void RespawnButtonPressed()
+    {
+        linkedBoatController.RespawnBoatAttempt();
+    }
 }

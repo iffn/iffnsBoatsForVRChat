@@ -93,6 +93,9 @@ public class BoatController : UdonSharpBehaviour
     public const int mirrorReflectionLayer = 18;
     bool isInVR;
 
+    Vector3 worldRespawnPosition;
+    Quaternion worldRespawnRotation;
+
     //Runtime parameters
     public LocalBoatStates localBoatState = LocalBoatStates.IdleAsOwner;
     
@@ -376,9 +379,12 @@ public class BoatController : UdonSharpBehaviour
 
         linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
 
-        localBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.IdleAsOwner : LocalBoatStates.NetworkControlled;
+        LocalBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.IdleAsOwner : LocalBoatStates.NetworkControlled;
 
         linkedDriveSystem.Setup(this);
+
+        worldRespawnPosition = transform.position;
+        worldRespawnRotation = transform.rotation;
 
         /*
         dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
@@ -478,6 +484,13 @@ public class BoatController : UdonSharpBehaviour
             default:
                 break;
         }
+    }
+
+    public void RespawnBoatAttempt()
+    {
+        if (localBoatState == LocalBoatStates.NetworkControlled) return;
+
+        transform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
     }
 
     public override void OnPreSerialization()
