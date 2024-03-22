@@ -454,6 +454,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     public void ActivationButtonPressed()
     {
+        if (activationButton.Pressed == false) return;
+
         switch (localBoatState)
         {
             case LocalBoatStates.IdleAsOwner:
@@ -472,6 +474,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     public void RespawnButtonPressed()
     {
+        if (respawnButton.Pressed == false) return;
+
         linkedBoatController.RespawnBoatAttempt();
     }
 }
