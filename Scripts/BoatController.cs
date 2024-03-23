@@ -308,32 +308,6 @@ public class BoatController : UdonSharpBehaviour
         return localPlayer.playerId < remotePlayer.playerId;
     }
 
-#if dragDebug 
-    public Vector3 velocityDebug;
-    public Vector3 dragForceDebug;
-    public Vector3 dragAreaDebug;
-#endif
-    
-    void CalculateAndApplyDrag() //ToDo: Move to hull calculator
-    {
-        Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
-
-        Vector3 dragArea = LinkedHullCalculator.DragAreaBelowWater;
-
-        Vector3 localDragForce = Vector3.zero;
-        localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
-        localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
-        localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
-
-#if dragDebug
-                velocityDebug = localVelocity;
-                dragAreaDebug = dragArea;
-                dragForceDebug = localDragForce;
-#endif
-
-        linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
-    }
-
     //Public functions
     public void StopRigidbody()
     {
@@ -347,7 +321,7 @@ public class BoatController : UdonSharpBehaviour
     {
         if (localBoatState == LocalBoatStates.NetworkControlled) return;
 
-        linkedRigidbody.transform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
+        rigidBodyTransform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
 
         StopRigidbody();
     }
@@ -428,7 +402,7 @@ public class BoatController : UdonSharpBehaviour
 
         calculationMesh.transform.parent = rigidBodyTransform;
 
-        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody);
+        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody, dragCoefficientsWithDensity);
 
         linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
 
@@ -485,19 +459,6 @@ public class BoatController : UdonSharpBehaviour
     private void FixedUpdate()
     {
         modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
-
-        switch (localBoatState)
-        {
-            case LocalBoatStates.IdleAsOwner:
-                break;
-            case LocalBoatStates.ActiveAsOwner:
-                CalculateAndApplyDrag();
-                break;
-            case LocalBoatStates.NetworkControlled:
-                break;
-            default:
-                break;
-        }
     }
 
     //VRChat functions

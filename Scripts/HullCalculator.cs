@@ -65,6 +65,8 @@ public class HullCalculator : UdonSharpBehaviour
     public string state = "";
 
     Rigidbody linkedRigidbody;
+    Transform rigidBodyTransform;
+    Vector3 dragCoefficientsWithDensity;
 
     public float pressureDragCoefficientLinear = 1f;
     public float pressureDragCoefficientQuadratic = 1f;
@@ -83,7 +85,7 @@ public class HullCalculator : UdonSharpBehaviour
         //Use setup instead
     }
 
-    public void Setup(MeshFilter hullMeshFilter, Transform hullTransform, Rigidbody linkedRigidbody)
+    public void Setup(MeshFilter hullMeshFilter, Transform hullTransform, Rigidbody linkedRigidbody, Vector3 dragCoefficientsWithDensity)
     {
         hullMesh = hullMeshFilter.mesh;
         this.hullTransform = hullTransform;
@@ -91,6 +93,11 @@ public class HullCalculator : UdonSharpBehaviour
         hullVerticesLocal = hullMesh.vertices;
 
         calculationVerticesGlobal = new Vector3[hullVerticesLocal.Length + hullMesh.triangles.Length / 3 * 2];
+
+        this.dragCoefficientsWithDensity = dragCoefficientsWithDensity;
+
+        this.linkedRigidbody = linkedRigidbody;
+        rigidBodyTransform = linkedRigidbody.transform;
 
         //Hull triangles
         int[] hullCorners = hullMesh.triangles;
@@ -107,8 +114,6 @@ public class HullCalculator : UdonSharpBehaviour
 
         aboveWaterCorners = new int[hullMeshTriangleCount * 2];
         belowWaterCorners = new int[hullMeshTriangleCount * 2];
-
-        this.linkedRigidbody = linkedRigidbody;
 
         belowWaterCorners = new int[cornerArrayLength];
         aboveWaterCorners = new int[cornerArrayLength];
@@ -172,6 +177,22 @@ public class HullCalculator : UdonSharpBehaviour
         GenerateCalculationMeshes();
 
         CalculateAndAddForcesToRigidbody(1);
+
+        CalculateAndApplyDrag();
+    }
+
+    void CalculateAndApplyDrag() //ToDo: Move to hull calculator
+    {
+        Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
+
+        Vector3 dragArea = DragAreaBelowWater;
+
+        Vector3 localDragForce = Vector3.zero;
+        localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
+        localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
+        localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
+
+        linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
     }
 
     public void GenerateCalculationMeshes()
