@@ -53,7 +53,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
     LocalBoatStates localBoatState;
     Vector3 currentThrust;
     float currentHorizontalSteeringAngle = 0;
-    bool inputActive = false;
     float startupRamp = 0.5f;
     bool enginePreviouslyActive = false;
     Vector2 inputs = Vector2.zero;
@@ -210,12 +209,61 @@ public class BoatDriveSystem : UdonSharpBehaviour
         soundAvailable = (startupSound && startupSound.clip && runningSound && runningSound.clip && shutdownSound && shutdownSound.clip);
     }
 
-    public void TryActivating()
+    static Vector2 GatherSquareControllerInput()
     {
+        //Source: https://github.com/Sacchan-VRC/SaccFlightAndVehicles/blob/b04482a48c808d8e13524ce6711a7853e4d7afda/Scripts/SaccAirVehicle/SaccAirVehicle.cs#L1140
+        Vector2 newInputs = new Vector2(
+            Input.GetAxis("Oculus_GearVR_LThumbstickX"),
+            Input.GetAxis("Oculus_GearVR_LThumbstickY"));
 
+        newInputs = Mathf.Clamp01(newInputs.magnitude) * newInputs.normalized; //Magnitude can apparently somehow be larger than 1
+
+        if (Mathf.Abs(newInputs.x) > Mathf.Abs(newInputs.y))
+        {
+            if (Mathf.Abs(newInputs.x) > 0)
+            {
+                float temp = newInputs.magnitude / Mathf.Abs(newInputs.x);
+                newInputs = temp * newInputs;
+            }
+        }
+        else if (Mathf.Abs(newInputs.y) > 0)
+        {
+            float temp = newInputs.magnitude / Mathf.Abs(newInputs.y);
+            newInputs = temp * newInputs;
+        }
+
+        return newInputs;
     }
 
-    static Vector2 GetSmoothInputs()
+    static Vector2 GatherDesktopInputs(Vector2 currentInputs)
+    {
+        Vector2 newInputs = Vector2.zero;
+
+        //Controller input
+        Vector2 controllerInput = GatherSquareControllerInput();
+
+        if (controllerInput.magnitude > 0.1f)
+        {
+            newInputs = controllerInput;
+        }
+        else
+        {
+            //Include Shift Ctrl Q E
+            Vector2 smoothInputs = GetSmoothInputOffset();
+
+            newInputs.x = Mathf.Clamp(currentInputs.x + smoothInputs.x, -1, 1);
+            newInputs.y = Mathf.Clamp(currentInputs.y + smoothInputs.y, -1, 1);
+        }
+
+        if(Input.GetKey(KeyCode.W)) newInputs.y = 1;
+        if(Input.GetKey(KeyCode.S)) newInputs.y = -1;
+        if(Input.GetKey(KeyCode.A)) newInputs.x = -1;
+        if(Input.GetKey(KeyCode.D)) newInputs.x = 1;
+
+        return newInputs;
+    }
+
+    static Vector2 GetSmoothInputOffset()
     {
         Vector2 returnValue = Vector2.zero;
 
@@ -242,97 +290,9 @@ public class BoatDriveSystem : UdonSharpBehaviour
         return returnValue;
     }
 
-    static Vector2 GetSquareInput()
+    Vector2 GetRemoteValues()
     {
-        //Source: https://github.com/Sacchan-VRC/SaccFlightAndVehicles/blob/b04482a48c808d8e13524ce6711a7853e4d7afda/Scripts/SaccAirVehicle/SaccAirVehicle.cs#L1140
-        Vector2 inputValue = new Vector2(
-            Input.GetAxis("Oculus_GearVR_LThumbstickX"),
-            Input.GetAxis("Oculus_GearVR_LThumbstickY"));
-
-        inputValue = Mathf.Clamp01(inputValue.magnitude) * inputValue.normalized; //Magnitude can apparently somehow be larger than 1
-
-        if (Mathf.Abs(inputValue.x) > Mathf.Abs(inputValue.y))
-        {
-            if (Mathf.Abs(inputValue.x) > 0)
-            {
-                float temp = inputValue.magnitude / Mathf.Abs(inputValue.x);
-                inputValue = temp * inputValue;
-            }
-        }
-        else if (Mathf.Abs(inputValue.y) > 0)
-        {
-            float temp = inputValue.magnitude / Mathf.Abs(inputValue.y);
-            inputValue = temp * inputValue;
-        }
-
-        return inputValue;
-    }
-
-    void GatherDirectInputs()
-    {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            inputs.y = 1;
-            inputActive = true;
-        }
-        else if (Input.GetKeyUp(KeyCode.W))
-        {
-            inputs.y = 0;
-            inputActive = false;
-        }
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            inputs.y = -1;
-            inputActive = true;
-        }
-        else if (Input.GetKeyUp(KeyCode.S))
-        {
-            inputs.y = 0;
-            inputActive = false;
-        }
-
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            inputs.x = -1;
-            inputActive = true;
-        }
-        else if (Input.GetKeyUp(KeyCode.A))
-        {
-            inputs.x = 0;
-            inputActive = false;
-        }
-
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            inputs.x = 1;
-            inputActive = true;
-        }
-        else if (Input.GetKeyUp(KeyCode.D))
-        {
-            inputs.x = 0;
-            inputActive = false;
-        }
-
-        if (!inputActive)
-        {
-            Vector2 controllerInput = GetSquareInput();
-
-            if (controllerInput.magnitude < 0.1f)
-            {
-                //Include Shift Ctrl Q E
-                Vector2 smoothInputs = GetSmoothInputs();
-
-                inputs.x = Mathf.Clamp(inputs.x + smoothInputs.x, -1, 1);
-                inputs.y = Mathf.Clamp(inputs.y + smoothInputs.y, -1, 1);
-            }
-            else inputs = controllerInput;
-        }
-    }
-
-    void GetRemoteValues()
-    {
-        inputs = linkedBoatController.SyncedInputs;
+        return linkedBoatController.SyncedInputs;
     }
 
     private void Update()
@@ -350,7 +310,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 /*
                 if (!isInVR)
                 {
-                    GatherDirectInputs();
+                    inputs = GatherDirectInputs();
                 }
                 else
                 {
@@ -369,7 +329,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
                 break;
             case LocalBoatStates.NetworkControlled:
-                GetRemoteValues();
+                inputs = GetRemoteValues();
                 SetIndicators();
                 UpdateContinuousSound();
                 CheckRemoteSound();
@@ -454,36 +414,22 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     public void OwnershipButtonPressed()
     {
-        if(localBoatState == LocalBoatStates.NetworkControlled)
-        {
-            Networking.SetOwner(Networking.LocalPlayer, linkedBoatController.gameObject);
-        }
+        if (ownershipButton.Pressed == false) return;
+
+        linkedBoatController.TryClaimOwnership();
     }
 
     public void ActivationButtonPressed()
     {
         if (activationButton.Pressed == false) return;
 
-        switch (localBoatState)
-        {
-            case LocalBoatStates.IdleAsOwner:
-                linkedBoatController.LocalBoatState = LocalBoatStates.ActiveAsOwner;
-                break;
-            case LocalBoatStates.ActiveAsOwner:
-                linkedBoatController.LocalBoatState = LocalBoatStates.IdleAsOwner;
-                break;
-            case LocalBoatStates.NetworkControlled:
-                //Skip
-                break;
-            default:
-                break;
-        }
+        linkedBoatController.TryToggleBoatActivation();
     }
 
     public void RespawnButtonPressed()
     {
         if (respawnButton.Pressed == false) return;
 
-        linkedBoatController.RespawnBoatAttempt();
+        linkedBoatController.TryRespawnBoat();
     }
 }

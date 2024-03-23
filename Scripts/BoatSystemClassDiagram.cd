@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="BoatController">
+    <Position X="4" Y="1.25" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>ggQABGABIqCAABAAFIhAABJgwAyAeguAIEEQwDQCUUA=</HashCode>
+      <FileName>Assets\iffnsStuff\iffnsBoatsForVRChat\Scripts\BoatController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BoatDriveSystem">
+    <Position X="8.5" Y="1.25" Width="4" />
+    <TypeIdentifier>
+      <HashCode>KCRIgUCACkAgDYAEgAAkAkIAQCBQQBAACFARiEwIIQA=</HashCode>
+      <FileName>Assets\iffnsStuff\iffnsBoatsForVRChat\Scripts\BoatDriveSystem.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HullCalculator">
+    <Position X="12.75" Y="1.25" Width="4" />
+    <TypeIdentifier>
+      <HashCode>CAIAAEkASvgQAFAAQYJEcTIhUgAAESAGAGICiACABAo=</HashCode>
+      <FileName>Assets\iffnsStuff\iffnsBoatsForVRChat\Scripts\HullCalculator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="LocalBoatStates" Collapsed="true">
+    <Position X="6.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAgAAAAAAAAAAAABAAAAAAAAAAAABA=</HashCode>
+      <FileName>Assets\iffnsStuff\iffnsBoatsForVRChat\Scripts\BoatController.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -282,8 +282,7 @@ public class BoatController : UdonSharpBehaviour
         return localPlayer.playerId < remotePlayer.playerId;
     }
 
-    //Public functions
-    public void StopRigidbody()
+    void StopRigidbody()
     {
         linkedRigidbody.velocity = Vector3.zero;
         linkedRigidbody.angularVelocity = Vector3.zero;
@@ -291,7 +290,55 @@ public class BoatController : UdonSharpBehaviour
         modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
     }
 
-    public void RespawnBoatAttempt()
+    void SetLocalInactive()
+    {
+        //Checks
+        switch (localBoatState)
+        {
+            case LocalBoatStates.IdleAsOwner:
+                //Ignore since already not driving
+                return;
+            case LocalBoatStates.ActiveAsOwner:
+                //pass
+                break;
+            case LocalBoatStates.NetworkControlled:
+                //Ignore since remotely controlled
+                return;
+            default:
+                break;
+        }
+
+        LocalBoatState = LocalBoatStates.IdleAsOwner;
+    }
+
+    //Public functions
+    public void TryClaimOwnership()
+    {
+        if (localBoatState == LocalBoatStates.NetworkControlled)
+        {
+            Networking.SetOwner(Networking.LocalPlayer, gameObject);
+        }
+    }
+
+    public void TryToggleBoatActivation()
+    {
+        switch (localBoatState)
+        {
+            case LocalBoatStates.IdleAsOwner:
+                LocalBoatState = LocalBoatStates.ActiveAsOwner;
+                break;
+            case LocalBoatStates.ActiveAsOwner:
+                LocalBoatState = LocalBoatStates.IdleAsOwner;
+                break;
+            case LocalBoatStates.NetworkControlled:
+                //Skip
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void TryRespawnBoat()
     {
         if (localBoatState == LocalBoatStates.NetworkControlled) return;
 
@@ -343,27 +390,6 @@ public class BoatController : UdonSharpBehaviour
 
         //Return state
         return true;
-    }
-
-    public void SetLocalInactive()
-    {
-        //Checks
-        switch (localBoatState)
-        {
-            case LocalBoatStates.IdleAsOwner:
-                //Ignore since already not driving
-                return;
-            case LocalBoatStates.ActiveAsOwner:
-                //pass
-                break;
-            case LocalBoatStates.NetworkControlled:
-                //Ignore since remotely controlled
-                return;
-            default:
-                break;
-        }
-
-        LocalBoatState = LocalBoatStates.IdleAsOwner;
     }
 
     //Unity functions
