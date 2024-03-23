@@ -97,118 +97,9 @@ public class BoatController : UdonSharpBehaviour
     Quaternion worldRespawnRotation;
 
     //Runtime parameters
-    public LocalBoatStates localBoatState = LocalBoatStates.IdleAsOwner;
-    
     float nextSerializationTime;
-    
 
-    public Rigidbody LinkedRigidbody
-    {
-        get
-        {
-            return linkedRigidbody;
-        }
-    }
-
-    public VRCObjectSync LinkedObjectSync
-    {
-        get
-        {
-            return linkedObjectSync;
-        }
-    }
-
-    public Vector2 SyncedInputs
-    {
-        get
-        {
-            return syncedInputs;
-        }
-    }
-
-    public Transform ExternalTeleportTarget
-    {
-        get
-        {
-            return externalTeleportTarget;
-        }
-    }
-
-    public Transform ModelHolder
-    {
-        get
-        {
-            return modelHolder;
-        }
-    }
-
-    public PlayerColliderController LinkedPlayerColliderControllerCanBeNull
-    {
-        get
-        {
-            return linkedPlayerColliderCanBeNull;
-        }
-    }
-
-    public HullCalculator LinkedHullCalculator
-    {
-        get
-        {
-            return linkedHullCalculator;
-        }
-    }
-
-    //Functio ns
-    bool LocalPlayerHasPriority(VRCPlayerApi remotePlayer)
-    {
-        return localPlayer.playerId < remotePlayer.playerId;
-    }
-
-    public void StopRigidbody()
-    {
-        linkedRigidbody.velocity = Vector3.zero;
-        linkedRigidbody.angularVelocity = Vector3.zero;
-
-        modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
-    }
-
-    bool LocalPhysicsActive
-    {
-        set
-        {
-            //Colliders
-            if (linkedPlayerColliderCanBeNull) 
-                linkedPlayerColliderCanBeNull.gameObject.layer = value ? mirrorReflectionLayer : defaultLayer;
-
-            boatCollider.gameObject.SetActive(value);
-
-            //Rigidbody
-            if (linkedObjectSync) linkedObjectSync.SetKinematic(value: !value);
-            else linkedRigidbody.isKinematic = !value;
-            
-            linkedRigidbody.useGravity = value;
-
-            if (!value)
-            {
-                linkedRigidbody.velocity = Vector3.zero;
-                linkedRigidbody.angularVelocity = Vector3.zero;
-            }
-
-            //Calculation
-            linkedHullCalculator.physicsActive = value;
-        }
-    }
-
-    bool PlatformActiveForMovement
-    {
-        set
-        {
-            syncedPlatformActiveForMovement = value;
-            if (Networking.IsOwner(gameObject)) RequestSerialization();
-            if (linkedPlayerColliderCanBeNull) linkedPlayerColliderCanBeNull.shouldSyncPlayer = value;
-        }
-    }
-
+    LocalBoatStates localBoatState = LocalBoatStates.IdleAsOwner;
     public LocalBoatStates LocalBoatState
     {
         get
@@ -318,6 +209,115 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
+    public Rigidbody LinkedRigidbody
+    {
+        get
+        {
+            return linkedRigidbody;
+        }
+    }
+
+    public VRCObjectSync LinkedObjectSync
+    {
+        get
+        {
+            return linkedObjectSync;
+        }
+    }
+
+    public Vector2 SyncedInputs
+    {
+        get
+        {
+            return syncedInputs;
+        }
+    }
+
+    public Transform ExternalTeleportTarget
+    {
+        get
+        {
+            return externalTeleportTarget;
+        }
+    }
+
+    public Transform ModelHolder
+    {
+        get
+        {
+            return modelHolder;
+        }
+    }
+
+    public PlayerColliderController LinkedPlayerColliderControllerCanBeNull
+    {
+        get
+        {
+            return linkedPlayerColliderCanBeNull;
+        }
+    }
+
+    public HullCalculator LinkedHullCalculator
+    {
+        get
+        {
+            return linkedHullCalculator;
+        }
+    }
+
+    //Functio ns
+    bool LocalPlayerHasPriority(VRCPlayerApi remotePlayer)
+    {
+        return localPlayer.playerId < remotePlayer.playerId;
+    }
+
+    public void StopRigidbody()
+    {
+        linkedRigidbody.velocity = Vector3.zero;
+        linkedRigidbody.angularVelocity = Vector3.zero;
+
+        modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
+    }
+
+    bool LocalPhysicsActive
+    {
+        set
+        {
+            //Colliders
+            if (linkedPlayerColliderCanBeNull) 
+                linkedPlayerColliderCanBeNull.gameObject.layer = value ? mirrorReflectionLayer : defaultLayer;
+
+            boatCollider.gameObject.SetActive(value);
+
+            //Rigidbody
+            if (linkedObjectSync) linkedObjectSync.SetKinematic(value: !value);
+            else linkedRigidbody.isKinematic = !value;
+            
+            linkedRigidbody.useGravity = value;
+
+            if (!value)
+            {
+                linkedRigidbody.velocity = Vector3.zero;
+                linkedRigidbody.angularVelocity = Vector3.zero;
+            }
+
+            //Calculation
+            linkedHullCalculator.physicsActive = value;
+        }
+    }
+
+    bool PlatformActiveForMovement
+    {
+        set
+        {
+            syncedPlatformActiveForMovement = value;
+            if (Networking.IsOwner(gameObject)) RequestSerialization();
+            if (linkedPlayerColliderCanBeNull) linkedPlayerColliderCanBeNull.shouldSyncPlayer = value;
+        }
+    }
+
+    
+
     public bool IsOrTrySettingLocallyActive()
     {
         //Checks
@@ -383,8 +383,8 @@ public class BoatController : UdonSharpBehaviour
 
         linkedDriveSystem.Setup(this);
 
-        worldRespawnPosition = transform.position;
-        worldRespawnRotation = transform.rotation;
+        worldRespawnPosition = linkedRigidbody.transform.position;
+        worldRespawnRotation = linkedRigidbody.transform.rotation;
 
         /*
         dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
@@ -490,7 +490,9 @@ public class BoatController : UdonSharpBehaviour
     {
         if (localBoatState == LocalBoatStates.NetworkControlled) return;
 
-        transform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
+        linkedRigidbody.transform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
+
+        StopRigidbody();
     }
 
     public override void OnPreSerialization()

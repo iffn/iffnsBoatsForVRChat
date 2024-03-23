@@ -205,6 +205,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
         linkedRigidbody = linkedBoatController.LinkedRigidbody;
         if (!linkedRigidbody) Debug.LogWarning("Error: linked boat controller does not seem to have the Rigidbody assigned");
 
+        LocalBoatState = linkedBoatController.LocalBoatState;
+
         soundAvailable = (startupSound && startupSound.clip && runningSound && runningSound.clip && shutdownSound && shutdownSound.clip);
     }
 
@@ -341,6 +343,11 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 break;
             case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
+
+                inputs.x = inputHelm.CurrentAngleDeg / 30;
+                inputs.y = inputThrottle.CurrentValue;
+
+                /*
                 if (!isInVR)
                 {
                     GatherDirectInputs();
@@ -349,6 +356,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 {
                     inputs = GetSquareInput();
                 }
+                */
 
                 currentHorizontalSteeringAngle = -inputs.x * maxRudderDeflectionAngle;
 
