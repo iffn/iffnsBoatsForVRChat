@@ -156,32 +156,6 @@ public class BoatController : UdonSharpBehaviour
                             break;
                     }
                     break;
-                /*
-                case LocalBoatStates.Towed:
-                    switch (localBoatState)
-                    {
-                        case LocalBoatStates.Idle:
-                            LocalPhysicsActive = true;
-                            PlatformActiveForMovement = true;
-                            syncedOwnershipLocked = true;
-                            break;
-                        case LocalBoatStates.LocallyActive:
-                            //Exception: Should not be reachable
-                            break;
-                        case LocalBoatStates.Towed:
-                            //No change
-                            break;
-                        case LocalBoatStates.NetworkControlled:
-                            Networking.SetOwner(localPlayer, gameObject);
-                            PlatformActiveForMovement = true;
-                            LocalPhysicsActive = true;
-                            syncedOwnershipLocked = true;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                */
                 case LocalBoatStates.NetworkControlled:
                     switch (localBoatState)
                     {
