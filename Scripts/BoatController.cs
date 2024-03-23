@@ -265,18 +265,14 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
-    //Functio ns
-    bool LocalPlayerHasPriority(VRCPlayerApi remotePlayer)
+    bool PlatformActiveForMovement
     {
-        return localPlayer.playerId < remotePlayer.playerId;
-    }
-
-    public void StopRigidbody()
-    {
-        linkedRigidbody.velocity = Vector3.zero;
-        linkedRigidbody.angularVelocity = Vector3.zero;
-
-        modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
+        set
+        {
+            syncedPlatformActiveForMovement = value;
+            if (Networking.IsOwner(gameObject)) RequestSerialization();
+            if (linkedPlayerColliderCanBeNull) linkedPlayerColliderCanBeNull.shouldSyncPlayer = value;
+        }
     }
 
     bool LocalPhysicsActive
@@ -284,7 +280,7 @@ public class BoatController : UdonSharpBehaviour
         set
         {
             //Colliders
-            if (linkedPlayerColliderCanBeNull) 
+            if (linkedPlayerColliderCanBeNull)
                 linkedPlayerColliderCanBeNull.gameObject.layer = value ? mirrorReflectionLayer : defaultLayer;
 
             boatCollider.gameObject.SetActive(value);
@@ -292,7 +288,7 @@ public class BoatController : UdonSharpBehaviour
             //Rigidbody
             if (linkedObjectSync) linkedObjectSync.SetKinematic(value: !value);
             else linkedRigidbody.isKinematic = !value;
-            
+
             linkedRigidbody.useGravity = value;
 
             if (!value)
@@ -306,17 +302,75 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
-    bool PlatformActiveForMovement
+    //Internal functions
+    bool LocalPlayerHasPriority(VRCPlayerApi remotePlayer)
     {
-        set
+        return localPlayer.playerId < remotePlayer.playerId;
+    }
+
+#if dragDebug 
+    public Vector3 velocityDebug;
+    public Vector3 dragForceDebug;
+    public Vector3 dragAreaDebug;
+#endif
+    
+    void CalculateAndApplyDrag() //ToDo: Move to hull calculator
+    {
+        Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
+
+        Vector3 dragArea = LinkedHullCalculator.DragAreaBelowWater;
+
+        Vector3 localDragForce = Vector3.zero;
+        localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
+        localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
+        localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
+
+#if dragDebug
+                velocityDebug = localVelocity;
+                dragAreaDebug = dragArea;
+                dragForceDebug = localDragForce;
+#endif
+
+        linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
+    }
+
+    //Public functions
+    public void StopRigidbody()
+    {
+        linkedRigidbody.velocity = Vector3.zero;
+        linkedRigidbody.angularVelocity = Vector3.zero;
+
+        modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
+    }
+
+    public void RespawnBoatAttempt()
+    {
+        if (localBoatState == LocalBoatStates.NetworkControlled) return;
+
+        linkedRigidbody.transform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
+
+        StopRigidbody();
+    }
+
+    public void SyncDriveValues(Vector2 inputs)
+    {
+        this.syncedInputs = inputs;
+    }
+
+    public void LocalPlayerEntered()
+    {
+        bool entryWorked = IsOrTrySettingLocallyActive();
+
+        if (!entryWorked)
         {
-            syncedPlatformActiveForMovement = value;
-            if (Networking.IsOwner(gameObject)) RequestSerialization();
-            if (linkedPlayerColliderCanBeNull) linkedPlayerColliderCanBeNull.shouldSyncPlayer = value;
+            //ToDo: Kick back out
         }
     }
 
-    
+    public void LocalPlayerExited()
+    {
+        SetLocalInactive();
+    }
 
     public bool IsOrTrySettingLocallyActive()
     {
@@ -364,8 +418,7 @@ public class BoatController : UdonSharpBehaviour
         LocalBoatState = LocalBoatStates.IdleAsOwner;
     }
 
-
-    //Events
+    //Unity functions
     void Start()
     {
         localPlayer = Networking.LocalPlayer;
@@ -397,19 +450,6 @@ public class BoatController : UdonSharpBehaviour
 
     void Update()
     {
-        /*
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            LocalBoatState = LocalBoatStates.LocallyActive;
-            Debug.Log("Active");
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            LocalBoatState = LocalBoatStates.Idle;
-            Debug.Log("Idle");
-        }
-        */
-
         switch (localBoatState)
         {
             case LocalBoatStates.IdleAsOwner:
@@ -442,32 +482,6 @@ public class BoatController : UdonSharpBehaviour
         */
     }
 
-#if dragDebug 
-    public Vector3 velocityDebug;
-    public Vector3 dragForceDebug;
-    public Vector3 dragAreaDebug;
-#endif
-    
-    void CalculateAndApplyDrag() //ToDo: Move to hull calculator
-    {
-        Vector3 localVelocity = rigidBodyTransform.InverseTransformVector(linkedRigidbody.velocity);
-
-        Vector3 dragArea = LinkedHullCalculator.DragAreaBelowWater;
-
-        Vector3 localDragForce = Vector3.zero;
-        localDragForce.x = -localVelocity.x * Mathf.Abs(localVelocity.x) * dragArea.x * dragCoefficientsWithDensity.x;
-        localDragForce.y = -localVelocity.y * Mathf.Abs(localVelocity.y) * dragArea.y * dragCoefficientsWithDensity.y;
-        localDragForce.z = -localVelocity.z * Mathf.Abs(localVelocity.z) * dragArea.z * dragCoefficientsWithDensity.z;
-
-#if dragDebug
-                velocityDebug = localVelocity;
-                dragAreaDebug = dragArea;
-                dragForceDebug = localDragForce;
-#endif
-
-        linkedRigidbody.AddForce(rigidBodyTransform.TransformVector(localDragForce));
-    }
-
     private void FixedUpdate()
     {
         modelHolder.SetPositionAndRotation(rigidBodyTransform.position, rigidBodyTransform.rotation);
@@ -486,15 +500,7 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
-    public void RespawnBoatAttempt()
-    {
-        if (localBoatState == LocalBoatStates.NetworkControlled) return;
-
-        linkedRigidbody.transform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
-
-        StopRigidbody();
-    }
-
+    //VRChat functions
     public override void OnPreSerialization()
     {
         nextSerializationTime = Time.timeSinceLevelLoad + timeBetweenSerializations;
@@ -503,26 +509,6 @@ public class BoatController : UdonSharpBehaviour
     public override void OnDeserialization()
     {
         PlatformActiveForMovement = syncedPlatformActiveForMovement;
-    }
-
-    public void SyncDriveValues(Vector2 inputs)
-    {
-        this.syncedInputs = inputs;
-    }
-
-    public void LocalPlayerEntered()
-    {
-        bool entryWorked = IsOrTrySettingLocallyActive();
-
-        if (!entryWorked)
-        {
-            //ToDo: Kick back out
-        }
-    }
-
-    public void LocalPlayerExited()
-    {
-        SetLocalInactive();
     }
 
     public override void OnOwnershipTransferred(VRCPlayerApi player)
