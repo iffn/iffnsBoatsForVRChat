@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.21217516, g: 0.24207905, b: 0.3018868, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
@@ -37,8 +37,8 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.1829724, g: 0.22866198, b: 0.306822, a: 1}
+  m_Sun: {fileID: 835190344}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3272,19 +3272,19 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 76db8ed88b8c681478625951df122f74,
+      objectReference: {fileID: 11400000, guid: f928ed3a87fadbc4ebc32f189a26d2e9,
         type: 2}
     - target: {fileID: 522075816842299775, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 0a99eb0108da65b47ae7d4c1a503ec1a,
+      objectReference: {fileID: 11400000, guid: 5d617ea30aab51d40bd7b3312608355b,
         type: 2}
     - target: {fileID: 906901157827498889, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 569095dc571c9364d9b00820d30c2276,
+      objectReference: {fileID: 11400000, guid: 2408c6dfe6d4a8643abc0eea6cf5029e,
         type: 2}
     - target: {fileID: 932345426210127542, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -3296,7 +3296,7 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 0a99eb0108da65b47ae7d4c1a503ec1a,
+      objectReference: {fileID: 11400000, guid: 5d617ea30aab51d40bd7b3312608355b,
         type: 2}
     - target: {fileID: 1113304082695915284, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -3326,7 +3326,7 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: d0b401ab4e9c2774cbb8486c7a389ca5,
+      objectReference: {fileID: 11400000, guid: 83bbac42828da8a419597e9cdbdac053,
         type: 2}
     - target: {fileID: 1977373851509992489, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -3356,7 +3356,7 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: e41651882f463df49b20352c154c653b,
+      objectReference: {fileID: 11400000, guid: 12c66fe300f31794597c5a0f183e1060,
         type: 2}
     - target: {fileID: 2993263053135658800, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -3368,7 +3368,7 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: e41651882f463df49b20352c154c653b,
+      objectReference: {fileID: 11400000, guid: 12c66fe300f31794597c5a0f183e1060,
         type: 2}
     - target: {fileID: 3594021621264220591, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -3388,6 +3388,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3945582988269547714, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
+    - target: {fileID: 4059304812313270750, guid: 905285fb6a17463428fd7ec02dd63172,
+        type: 3}
+      propertyPath: serializedProgramAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 12c66fe300f31794597c5a0f183e1060,
+        type: 2}
     - target: {fileID: 4488750926550256404, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: serializationData.Prefab
@@ -3404,7 +3410,7 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: e41651882f463df49b20352c154c653b,
+      objectReference: {fileID: 11400000, guid: 12c66fe300f31794597c5a0f183e1060,
         type: 2}
     - target: {fileID: 5333707395069275126, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
@@ -3577,13 +3583,13 @@ PrefabInstance:
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 0a99eb0108da65b47ae7d4c1a503ec1a,
+      objectReference: {fileID: 11400000, guid: 5d617ea30aab51d40bd7b3312608355b,
         type: 2}
     - target: {fileID: 8512816608621148853, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
       propertyPath: serializedProgramAsset
       value: 
-      objectReference: {fileID: 11400000, guid: e41651882f463df49b20352c154c653b,
+      objectReference: {fileID: 11400000, guid: 12c66fe300f31794597c5a0f183e1060,
         type: 2}
     - target: {fileID: 8628178335794851413, guid: 905285fb6a17463428fd7ec02dd63172,
         type: 3}
