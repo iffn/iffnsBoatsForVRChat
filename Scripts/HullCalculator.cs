@@ -28,20 +28,8 @@ public class HullCalculator : UdonSharpBehaviour
     public int[] aboveWaterCorners = new int[0];
     public int aboveWaterCornerCounter = 0;
     public int belowWaterCornerCounter = 0;
-#if complexCalculation
-    public float[] aboveWaterTriangleArea = new float[0];
-#endif
     public float[] belowWaterTriangleArea = new float[0];
-#if complexCalculation
-    public Vector3[] aboveWaterTriangleCenters = new Vector3[0];
-#endif
     public Vector3[] belowWaterTriangleCenters = new Vector3[0];
-#if complexCalculation
-    public Vector3[] aboveWaterTriangleNormals = new Vector3[0];
-#endif
-#if debugVelocity
-    public float debugVelocity;
-#endif
     public Vector3[] belowWaterTriangleNormals = new Vector3[0];
     public Vector3[] buoyancyForces = new Vector3[0];
     public Vector3[] frictionDragForces = new Vector3[0];
@@ -56,7 +44,6 @@ public class HullCalculator : UdonSharpBehaviour
 
     int[] oneAboveTheWaterTriangles = new int[0];
     int[] twoAboveTheWaterTriangles = new int[0];
-    float boatLength = 1;
 
     public Vector3 DragAreaBelowWater {  get; private set; }
 
@@ -125,18 +112,9 @@ public class HullCalculator : UdonSharpBehaviour
 
         belowWaterCorners = new int[cornerArrayLength];
         aboveWaterCorners = new int[cornerArrayLength];
-#if complexCalculation
-        aboveWaterTriangleArea = new float[triangleArrayLength];
-#endif
         belowWaterTriangleArea = new float[triangleArrayLength];
 
-#if complexCalculation
-        aboveWaterTriangleCenters = new Vector3[triangleArrayLength];
-#endif
         belowWaterTriangleCenters = new Vector3[triangleArrayLength];
-#if complexCalculation
-        aboveWaterTriangleNormals = new Vector3[triangleArrayLength];
-#endif
         belowWaterTriangleNormals = new Vector3[triangleArrayLength];
         buoyancyForces = new Vector3[triangleArrayLength];
         frictionDragForces = new Vector3[triangleArrayLength];
@@ -147,8 +125,6 @@ public class HullCalculator : UdonSharpBehaviour
 
         oneAboveTheWaterTriangles = new int[hullMeshTriangleCount];
         twoAboveTheWaterTriangles = new int[hullMeshTriangleCount];
-
-        boatLength = hullMesh.bounds.max.z;
 
         for (int i = 0; i < hullCorners.Length; i += 3)
         {
@@ -191,19 +167,11 @@ public class HullCalculator : UdonSharpBehaviour
 
     private void FixedUpdate()
     {
-#if debugVelocity
-        debugVelocity = linkedRigidbody.velocity.magnitude;
-#endif
-
         if (!physicsActive) return;
 
         GenerateCalculationMeshes();
 
         CalculateAndAddForcesToRigidbody(1);
-
-#if sumUpForcesWhileDriving
-        SumUpDForces();
-#endif
     }
 
     public void GenerateCalculationMeshes()
@@ -278,11 +246,6 @@ public class HullCalculator : UdonSharpBehaviour
                 aboveWaterCorners[aboveWaterCornerCounter] = hullMeshTriangles[i];
                 aboveWaterCorners[aboveWaterCornerCounter + 1] = hullMeshTriangles[i1];
                 aboveWaterCorners[aboveWaterCornerCounter + 2] = hullMeshTriangles[i2];
-#if complexCalculation
-                aboveWaterTriangleArea[belowWaterCornerCounter3rd] = hullTriangleArea[i3rd];
-                aboveWaterTriangleCenters[belowWaterCornerCounter3rd] = hullTransform.TransformPoint(hullTriangleCenters[i3rd]);
-                aboveWaterTriangleNormals[belowWaterCornerCounter3rd] = hullTransform.TransformVector(hullTriangleNormals[i3rd]);
-#endif
 
                 aboveWaterCornerCounter += 3;
             }
@@ -351,15 +314,6 @@ public class HullCalculator : UdonSharpBehaviour
 
             //Triangles before vertices because of index
             int aboveWaterCornerCounter3rd = aboveWaterCornerCounter / 3;
-
-            /* -> Skip since not needed
-            aboveWaterTriangleArea[aboveWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(highPoint, betweenPoint1, betweenPoint2);
-            aboveWaterTriangleCenters[aboveWaterCornerCounter3rd] = (highPoint + betweenPoint1 + betweenPoint2) * 0.33333333333333333f;
-            aboveWaterTriangleNormals[aboveWaterCornerCounter3rd] = CalculateTriangleNormal(highPoint, betweenPoint1, betweenPoint2);
-            aboveWaterCorners[aboveWaterCornerCounter++] = highCorner;
-            aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter;
-            aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter + 1;
-            */
 
             int belowWaterCornerCounter3rd = belowWaterCornerCounter / 3;
             belowWaterTriangleArea[belowWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(lowPoint1, lowPoint2, betweenPoint2);
@@ -449,57 +403,17 @@ public class HullCalculator : UdonSharpBehaviour
             belowWaterCorners[belowWaterCornerCounter++] = lowCorner;
             belowWaterCorners[belowWaterCornerCounter++] = vertexCounter;
             belowWaterCorners[belowWaterCornerCounter++] = vertexCounter + 1;
-            
-            /* -> Skip since not needed
-            aboveWaterTriangleArea[aboveWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(highPoint1, highPoint2, betweenPoint2);
-            aboveWaterTriangleCenters[aboveWaterCornerCounter3rd] = (highPoint1 + highPoint2 + betweenPoint2) * 0.33333333333333333f;
-            aboveWaterTriangleNormals[aboveWaterCornerCounter3rd] = CalculateTriangleNormal(highPoint1, highPoint2, betweenPoint2);
-            aboveWaterCorners[aboveWaterCornerCounter++] = highCorner1;
-            aboveWaterCorners[aboveWaterCornerCounter++] = highCorner2;
-            aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter + 1;
-            aboveWaterCornerCounter3rd++;
-
-            aboveWaterTriangleArea[aboveWaterCornerCounter3rd] = CalculateTriangleAreFromPoints(highPoint1, betweenPoint2, betweenPoint1);
-            aboveWaterTriangleCenters[aboveWaterCornerCounter3rd] = (highPoint1 + betweenPoint2 + betweenPoint1) * 0.33333333333333333f;
-            aboveWaterTriangleNormals[aboveWaterCornerCounter3rd] = CalculateTriangleNormal(highPoint1, betweenPoint2, betweenPoint1);
-            aboveWaterCorners[aboveWaterCornerCounter++] = highCorner1;
-            aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter + 1;
-            aboveWaterCorners[aboveWaterCornerCounter++] = vertexCounter;
-            */
 
             calculationVerticesGlobal[vertexCounter++] = betweenPoint1;
             calculationVerticesGlobal[vertexCounter++] = betweenPoint2;
         }
     }
 
-    public void AddPreviousForces(Rigidbody rb)
-    {
-        int belowWaterTriangles = belowWaterCornerCounter / 3;
-
-        for (int i = 0; i < belowWaterTriangles; i++)
-        {
-            rb.AddForceAtPosition(buoyancyForces[i] + frictionDragForces[i] + pressureForces[i], belowWaterTriangleCenters[i]);
-        }
-    }
-
-#if complexCalculation
-    public void CalculateForcesAndSaveToArray(Vector3 boatVelocity, Vector3 angularVelocity)
-#else
     public void CalculateForcesAndSaveToArray(Vector3 boatVelocity)
-#endif
     {
         int belowWaterTriangles = belowWaterCornerCounter / 3;
 
         Vector3 linearVelocityOfCenter = boatVelocity;
-
-#if complexCalculation
-        Vector3 movementCenter = linkedRigidbody.worldCenterOfMass;
-        Vector3 angularVelocityOfCenter = angularVelocity;
-        float reynoldsNumber = linearVelocityOfCenter.magnitude * boatLength / waterKinematicViscosity;
-        Vector3 negativeBoatVelocityDirection = -linearVelocityOfCenter.normalized;
-        float frictionCoefficientDividerPart = (Mathf.Log10(reynoldsNumber) - 2);
-        float frictionalDragCoefficient = 0.075f / (frictionCoefficientDividerPart * frictionCoefficientDividerPart);
-#endif
 
         for (int i = 0; i < belowWaterTriangles; i++)
         {
@@ -514,40 +428,6 @@ public class HullCalculator : UdonSharpBehaviour
             buoyancyForce.z = 0;
 
             buoyancyForces[i] = buoyancyForce;
-
-#if complexCalculation
-            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
-            float velocityMagnitude = velocity.magnitude;
-            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
-
-            //Friction drag force
-            float frictionDragForceMagnitude = 0.5f * waterDensity * belowWaterTriangleArea[i] * frictionalDragCoefficient * velocityMagnitude * velocityMagnitude * Mathf.Sin(angleBetweenVelocityAndFaceNormal);
-            Vector3 frictionDragForce = frictionForceFactor * frictionDragForceMagnitude * negativeBoatVelocityDirection;
-            frictionDragForces[i] = frictionDragForce;
-
-            //Pressure and suction drag force
-            if (angleBetweenVelocityAndFaceNormal != 0)
-            {
-                float pressureSuctionDragForce;
-
-                if (angleBetweenVelocityAndFaceNormal > 0)
-                {
-                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * pressureFalloffPower;
-                }
-                else
-                {
-                    pressureSuctionDragForce = -(suctionDragCoefficientLinear * velocityMagnitude + suctionDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * suctionFalloffPower;
-                }
-
-                Vector3 pressureForce = (pressureForceFactor * pressureSuctionDragForce * normal);
-
-                pressureForces[i] = pressureForce;
-            }
-            else
-            {
-                pressureForces[i] = Vector3.zero;
-            }
-#endif
         }
     }
 
@@ -583,18 +463,6 @@ public class HullCalculator : UdonSharpBehaviour
     {
         int belowWaterTriangles = belowWaterCornerCounter / 3;
 
-#if complexCalculation
-        Vector3 movementCenter = linkedRigidbody.worldCenterOfMass;
-        Vector3 linearVelocityOfCenter = linkedRigidbody.velocity;
-        Vector3 angularVelocityOfCenter = linkedRigidbody.angularVelocity;
-
-        Vector3 negativeBoatVelocityDirection = -linearVelocityOfCenter.normalized;
-        float reynoldsNumber = linearVelocityOfCenter.magnitude * boatLength / waterKinematicViscosity;
-        float frictionCoefficientDividerPart = (Mathf.Log10(reynoldsNumber) - 2);
-        float frictionalDragCoefficient = 0.075f / (frictionCoefficientDividerPart * frictionCoefficientDividerPart);
-#endif
-
-
         for (int i = 0; i < belowWaterTriangles; i++)
         {
             //General data
@@ -606,54 +474,8 @@ public class HullCalculator : UdonSharpBehaviour
             Vector3 buoyancyForce = waterDensity * gravity * GetDistanceToWater(center) * area * normal;
             buoyancyForce.x = 0;
             buoyancyForce.z = 0;
-#if sumUpForcesWhileDriving
-            buoyancyForces[i] = buoyancyForce;
-#endif
+
             linkedRigidbody.AddForceAtPosition(forceMultiplier * buoyancyForce, belowWaterTriangleCenters[i]);
-
-#if complexCalculation
-            Vector3 velocity = CalculateVelocityAtPoint(movementCenter, linearVelocityOfCenter, angularVelocityOfCenter, center);
-            float velocityMagnitude = velocity.magnitude;
-            float angleBetweenVelocityAndFaceNormal = Vector3.Angle(normal, velocity);
-
-            //Friction drag force
-            float frictionDragForceMagnitude = 0.5f * waterDensity * belowWaterTriangleArea[i] * frictionalDragCoefficient * velocityMagnitude * velocityMagnitude * Mathf.Sin(angleBetweenVelocityAndFaceNormal);
-            Vector3 frictionDragForce = frictionForceFactor * frictionDragForceMagnitude * negativeBoatVelocityDirection;
-            linkedRigidbody.AddForceAtPosition(forceMultiplier * frictionDragForce, center);
-
-#if sumUpForcesWhileDriving
-            frictionDragForces[i] = frictionDragForce;
-#endif
-
-            //Pressure and suction drag force
-            if (angleBetweenVelocityAndFaceNormal != 0)
-            {
-                float pressureSuctionDragForce;
-
-                if (angleBetweenVelocityAndFaceNormal > 0)
-                {
-                    pressureSuctionDragForce = -(pressureDragCoefficientLinear * velocityMagnitude + pressureDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * pressureFalloffPower;
-                }
-                else
-                {
-                    pressureSuctionDragForce = -(suctionDragCoefficientLinear * velocityMagnitude + suctionDragCoefficientQuadratic * velocityMagnitude * velocityMagnitude) * area * Mathf.Cos(angleBetweenVelocityAndFaceNormal) * suctionFalloffPower;
-                }
-
-                Vector3 pressureForce = (pressureForceFactor * pressureSuctionDragForce * normal);
-
-                linkedRigidbody.AddForceAtPosition(forceMultiplier * pressureForce, center);
-
-#if sumUpForcesWhileDriving
-                pressureForces[i] = pressureForce;
-#endif
-            }
-            else
-            {
-#if sumUpForcesWhileDriving
-                pressureForces[i] = Vector3.zero;
-#endif
-            }
-#endif
         }
     }
 
@@ -665,13 +487,6 @@ public class HullCalculator : UdonSharpBehaviour
     public Vector3 CalculateTriangleNormal(Vector3 p1, Vector3 p2, Vector3 p3)
     {
         return Vector3.Cross(p2 - p1, p3 - p1).normalized;
-    }
-
-    public Vector3 CalculateVelocityAtPoint(Vector3 movementCenter, Vector3 linearVelocityOfCenter, Vector3 angularVelocityOfCenter, Vector3 pointCenter)
-    {
-        Vector3 centerOffset = pointCenter - movementCenter;
-
-        return linearVelocityOfCenter + Vector3.Cross(angularVelocityOfCenter, centerOffset);
     }
 
     public static float CalculateTriangleAreFromPoints(Vector3 A, Vector3 B, Vector3 C)
