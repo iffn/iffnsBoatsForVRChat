@@ -27,8 +27,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] AudioSource runningSound;
     [SerializeField] AudioSource shutdownSound;
 
-    [SerializeField] RotationInteractor inputHelm;
-    [SerializeField] LinearSliderInteractor inputThrottle;
+    [SerializeField] SingleFloatInteractor inputHelm;
+    [SerializeField] SingleFloatInteractor inputThrottle;
     [SerializeField] ButtonInteractor respawnButton;
     [SerializeField] ButtonInteractor ownershipButton;
     [SerializeField] ButtonInteractor activationButton;
@@ -148,8 +148,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     void SetIndicators()
     {
-        if (inputHelm) inputHelm.CurrentAngleDeg = inputs.x * 30f;
-        if (inputThrottle) inputThrottle.CurrentValue = inputs.y;
+        if (inputHelm) inputHelm.CurrentControlValue = inputs.x;
+        if (inputThrottle) inputThrottle.CurrentControlValue = inputs.y;
     }
 
     void StartSound()
@@ -304,8 +304,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
             case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
 
-                inputs.x = inputHelm.CurrentAngleDeg / 30;
-                inputs.y = inputThrottle.CurrentValue;
+                inputs.x = inputHelm.CurrentControlValue;
+                inputs.y = inputThrottle.CurrentControlValue;
 
                 /*
                 if (!isInVR)
