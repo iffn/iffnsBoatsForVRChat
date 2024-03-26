@@ -146,10 +146,31 @@ public class BoatDriveSystem : UdonSharpBehaviour
         }
     }
 
-    void SetIndicators()
+    void HandleControls()
     {
+        //Get input values
+        if (inputHelm) inputs.x = inputHelm.CurrentControlValue;
+        if (inputThrottle) inputs.y = inputThrottle.CurrentControlValue;
+
+        /*
+        if (!isInVR)
+        {
+            inputs = GatherDirectInputs();
+        }
+        else
+        {
+            inputs = GetSquareInput();
+        }
+        */
+
+        //Apply inputs
+        currentHorizontalSteeringAngle = -inputs.x * maxRudderDeflectionAngle;
+        thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
+
+        /*
         if (inputHelm) inputHelm.CurrentControlValue = inputs.x;
         if (inputThrottle) inputThrottle.CurrentControlValue = inputs.y;
+        */
     }
 
     void StartSound()
@@ -304,25 +325,11 @@ public class BoatDriveSystem : UdonSharpBehaviour
             case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
 
-                inputs.x = inputHelm.CurrentControlValue;
-                inputs.y = inputThrottle.CurrentControlValue;
+                
 
-                /*
-                if (!isInVR)
-                {
-                    inputs = GatherDirectInputs();
-                }
-                else
-                {
-                    inputs = GetSquareInput();
-                }
-                */
+                HandleControls();
 
-                currentHorizontalSteeringAngle = -inputs.x * maxRudderDeflectionAngle;
 
-                thruster.transform.localRotation = Quaternion.Euler(0, currentHorizontalSteeringAngle, 0);
-
-                SetIndicators();
                 UpdateContinuousSound();
 
                 linkedBoatController.SyncDriveValues(inputs);
@@ -330,7 +337,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 break;
             case LocalBoatStates.NetworkControlled:
                 inputs = GetRemoteValues();
-                SetIndicators();
+                HandleControls();
                 UpdateContinuousSound();
                 CheckRemoteSound();
                 break;
