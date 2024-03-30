@@ -260,7 +260,8 @@ public class BoatController : UdonSharpBehaviour
             boatCollider.gameObject.SetActive(value);
 
             //Rigidbody
-            if (linkedObjectSync) linkedObjectSync.SetKinematic(value: !value);
+            
+            if (linkedObjectSync) linkedObjectSync.SetKinematic(!value);
             else linkedRigidbody.isKinematic = !value;
 
             linkedRigidbody.useGravity = value;
