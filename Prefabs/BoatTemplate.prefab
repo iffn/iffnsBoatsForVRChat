@@ -560,7 +560,8 @@ MonoBehaviour:
   - {fileID: 7162232285650138264}
   linkedInteractionReceiverElements:
   - {fileID: 2466786773983161000}
-  stateChangeMessage: ActivationButtonPressed
+  interactionStartMessage: ActivationButtonPressed
+  interactionStopMessage: 
 --- !u!114 &8337459937767878572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -755,7 +756,8 @@ MonoBehaviour:
   - {fileID: 563316456273108997}
   linkedInteractionReceiverElements:
   - {fileID: 2466786773983161000}
-  stateChangeMessage: OwnershipButtonPressed
+  interactionStartMessage: OwnershipButtonPressed
+  interactionStopMessage: 
 --- !u!114 &522075816842299775
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1514,7 +1516,8 @@ MonoBehaviour:
   - {fileID: 238791870226855705}
   linkedInteractionReceiverElements:
   - {fileID: 2466786773983161000}
-  stateChangeMessage: RespawnButtonPressed
+  interactionStartMessage: RespawnButtonPressed
+  interactionStopMessage: 
 --- !u!114 &1039074875941829660
 MonoBehaviour:
   m_ObjectHideFlags: 0
