@@ -382,11 +382,13 @@ public class BoatDriveSystem : UdonSharpBehaviour
     {
         if (linkedBoatController.ownershipLocked)
         {
+            ownershipButton.InteractionCollidersEnabled = false;
             ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\nOwnership locked";
             ownershipButtonRenderer.sharedMaterial = inactiveButtonMaterial;
         }
         else
         {
+            ownershipButton.InteractionCollidersEnabled = true;
             ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\n[Click to claim]";
             ownershipButtonRenderer.sharedMaterial = disabledButtonMaterial;
         }
@@ -408,15 +410,13 @@ public class BoatDriveSystem : UdonSharpBehaviour
         switch (localBoatState)
         {
             case LocalBoatStates.IdleAsOwner:
+                linkedBoatController.SyncedInputs = inputs;
                 break;
             case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
                 HandleLocalControls();
-
                 UpdateContinuousSound();
-
                 linkedBoatController.SyncedInputs = inputs;
-
                 break;
             case LocalBoatStates.NetworkControlled:
 
