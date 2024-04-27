@@ -289,14 +289,14 @@ public class BoatController : UdonSharpBehaviour
         rigidBodyTransform = linkedRigidbody.transform;
 
         calculationMesh.transform.parent = rigidBodyTransform;
+        
+        linkedDriveSystem.Setup(this);
 
         linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody, dragCoefficientsWithDensity);
 
         linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
 
         LocalBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.IdleAsOwner : LocalBoatStates.NetworkControlled;
-
-        linkedDriveSystem.Setup(this);
 
         worldRespawnPosition = linkedRigidbody.transform.position;
         worldRespawnRotation = linkedRigidbody.transform.rotation;
@@ -483,8 +483,6 @@ public class BoatController : UdonSharpBehaviour
 
     public override void OnOwnershipTransferred(VRCPlayerApi player)
     {
-        SetupOnce();
-
         base.OnOwnershipTransferred(player);
 
         if (player.isLocal)

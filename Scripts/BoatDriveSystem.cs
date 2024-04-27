@@ -1,5 +1,6 @@
 ﻿//UdonCompilerStopper
 using iffnsStuff.iffnsVRCStuff.InteractionController;
+using System.Globalization;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -400,8 +401,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
                     Debug.LogWarning($"Error: {nameof(LocalBoatStates)} enum state not defined");
                     break;
             }
-
-            //linkedBoatController is somehow null here on second player startup
 
             if (isOwner)
             {
