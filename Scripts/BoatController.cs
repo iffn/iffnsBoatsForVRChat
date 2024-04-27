@@ -138,6 +138,7 @@ public class BoatController : UdonSharpBehaviour
                         case LocalBoatStates.NetworkControlled:
                             PlatformActiveForMovement = false;
                             syncedOwnershipLocked = false;
+                            RequestSerialization();
                             break;
                         default:
                             break;
@@ -501,6 +502,7 @@ public class BoatController : UdonSharpBehaviour
     public override void OnDeserialization()
     {
         PlatformActiveForMovement = syncedPlatformActiveForMovement;
+        linkedDriveSystem.UpdateRemoteOwnershipButton();
     }
 
     void SetCurrentPlayerAsOwner()

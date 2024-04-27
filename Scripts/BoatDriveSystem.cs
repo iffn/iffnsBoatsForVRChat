@@ -5,6 +5,7 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
+using static UnityEngine.Rendering.DebugUI;
 
 
 public class BoatDriveSystem : UdonSharpBehaviour
@@ -137,6 +138,53 @@ public class BoatDriveSystem : UdonSharpBehaviour
             localBoatState = value;
 
             ButtonState = value;
+        }
+    }
+
+    LocalBoatStates ButtonState
+    {
+        set
+        {
+            bool isOwner;
+
+            switch (value)
+            {
+                case LocalBoatStates.IdleAsOwner:
+                    isOwner = true;
+                    activationButtonRenderer.sharedMaterial = disabledButtonMaterial;
+                    boatStateText.text = "Boat state: Idle";
+                    break;
+                case LocalBoatStates.ActiveAsOwner:
+                    activationButtonRenderer.sharedMaterial = enabledButtonMaterial;
+                    boatStateText.text = "Boat state: Running";
+                    isOwner = true;
+                    break;
+                case LocalBoatStates.NetworkControlled:
+                    activationButtonRenderer.sharedMaterial = inactiveButtonMaterial;
+                    boatStateText.text = "Boat state: Network controlled";
+                    isOwner = false;
+                    break;
+                default:
+                    isOwner = false;
+                    Debug.LogWarning($"Error: {nameof(LocalBoatStates)} enum state not defined");
+                    break;
+            }
+
+            if (isOwner)
+            {
+                ownershipText.text = $"Current owner:\nYou";
+            }
+            else
+            {
+                UpdateRemoteOwnershipButton();
+            }
+
+            respawnButtonRenderer.sharedMaterial = isOwner ? activeRespawnButtonMaterial : inactiveRespawnButtonMaterial;
+            ownershipButtonRenderer.sharedMaterial = isOwner ? enabledButtonMaterial : disabledButtonMaterial;
+
+            respawnButton.InteractionCollidersEnabled = isOwner;
+            activationButton.InteractionCollidersEnabled = isOwner;
+            ownershipButton.InteractionCollidersEnabled = !isOwner;
         }
     }
 
@@ -328,6 +376,20 @@ public class BoatDriveSystem : UdonSharpBehaviour
         return returnValue;
     }
 
+    public void UpdateRemoteOwnershipButton()
+    {
+        if (linkedBoatController.ownershipLocked)
+        {
+            ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\nOwnership locked";
+            ownershipButtonRenderer.sharedMaterial = inactiveButtonMaterial;
+        }
+        else
+        {
+            ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\n[Click to claim]";
+            ownershipButtonRenderer.sharedMaterial = disabledButtonMaterial;
+        }
+    }
+
     void UpdateRemoteInputs()
     {
         inputs = linkedBoatController.SyncedInputs;
@@ -387,60 +449,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
                 break;
             default:
                 break;
-        }
-    }
-
-    LocalBoatStates ButtonState
-    {
-        set
-        {
-            bool isOwner;
-
-            switch (value)
-            {
-                case LocalBoatStates.IdleAsOwner:
-                    isOwner = true;
-                    activationButtonRenderer.sharedMaterial = disabledButtonMaterial;
-                    boatStateText.text = "Boat state: Idle";
-                    break;
-                case LocalBoatStates.ActiveAsOwner:
-                    activationButtonRenderer.sharedMaterial = enabledButtonMaterial;
-                    boatStateText.text = "Boat state: Running";
-                    isOwner = true;
-                    break;
-                case LocalBoatStates.NetworkControlled:
-                    activationButtonRenderer.sharedMaterial = inactiveButtonMaterial;
-                    boatStateText.text = "Boat state: Network controlled";
-                    isOwner = false;
-                    break;
-                default:
-                    isOwner = false;
-                    Debug.LogWarning($"Error: {nameof(LocalBoatStates)} enum state not defined");
-                    break;
-            }
-
-            if (isOwner)
-            {
-                ownershipText.text = $"Current owner:\nYou";
-            }
-            else
-            {
-                if (linkedBoatController.ownershipLocked)
-                {
-                    ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\nOwnership locked";
-                }
-                else
-                {
-                    ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\n[Click to claim]";
-                }
-            }
-
-            respawnButtonRenderer.sharedMaterial = isOwner ? activeRespawnButtonMaterial : inactiveRespawnButtonMaterial;
-            ownershipButtonRenderer.sharedMaterial = isOwner ? enabledButtonMaterial : disabledButtonMaterial;
-
-            respawnButton.InteractionCollidersEnabled = isOwner;
-            activationButton.InteractionCollidersEnabled = isOwner;
-            ownershipButton.InteractionCollidersEnabled = !isOwner;
         }
     }
 
