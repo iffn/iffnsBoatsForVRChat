@@ -23,7 +23,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] float maxRudderDeflectionAngle = 20;
 
     [Header("Linked components")]
-    BoatController linkedBoatController;
     [SerializeField] Transform thruster;
     [SerializeField] AudioSource startupSound;
     [SerializeField] AudioSource runningSound;
@@ -47,6 +46,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] TMPro.TextMeshProUGUI debugText;
 
     //Fixed parameters
+    const float smoothTime = 0.068f;
+    BoatController linkedBoatController;
     Rigidbody linkedRigidbody;
     bool soundAvailable;
     bool isInVR;
@@ -59,6 +60,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
     float startupRamp = 0.5f;
     bool enginePreviouslyActive = false;
     Vector2 inputs = Vector2.zero;
+    Vector2 inputSmoothingVelocity;
 
     public string[] DebugText
     {
@@ -392,7 +394,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
     void UpdateRemoteInputs()
     {
-        inputs = linkedBoatController.SyncedInputs;
+        inputs.x = Mathf.SmoothDamp(inputs.x, linkedBoatController.SyncedInputs.x, ref inputSmoothingVelocity.x, smoothTime);
+        inputs.y = Mathf.SmoothDamp(inputs.y, linkedBoatController.SyncedInputs.y, ref inputSmoothingVelocity.y, smoothTime);
 
         inputHelm.CurrentControlValue = inputs.x;
         inputThrottle.CurrentControlValue = inputs.y;
@@ -416,8 +419,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
 
                 break;
             case LocalBoatStates.NetworkControlled:
-                
 
+                UpdateRemoteInputs();
                 UpdateContinuousSound();
                 CheckRemoteSound();
                 break;

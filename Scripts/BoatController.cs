@@ -62,7 +62,6 @@ public class BoatController : UdonSharpBehaviour
         {
             string[] returnString = new string[]
             {
-                
                 $"Debug of {nameof(BoatController)} called {gameObject.name}",
                 $"Owner of controller = {PlayerText(Networking.GetOwner(gameObject))}",
                 $"Owner of rigidbody = {PlayerText(Networking.GetOwner(linkedRigidbody.gameObject))}",
@@ -73,6 +72,7 @@ public class BoatController : UdonSharpBehaviour
                 $"IsKinematic: {linkedRigidbody.isKinematic}",
                 $"{nameof(syncedPlatformActiveForMovement)}: {syncedPlatformActiveForMovement}",
                 $"{nameof(syncedOwnershipLocked)}: {syncedOwnershipLocked}",
+                $"{nameof(syncedInputs)}: {syncedInputs}",
                 $"{nameof(localBoatState)}: {localBoatState}",
             };
 
