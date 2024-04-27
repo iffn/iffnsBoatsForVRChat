@@ -47,15 +47,25 @@ public class BoatController : UdonSharpBehaviour
     [SerializeField] Rigidbody linkedRigidbody;
     [SerializeField] HullCalculator linkedHullCalculator;
 
+    public static string PlayerText(VRCPlayerApi player)
+    {
+#if UNITY_EDITOR
+        return $"{player.displayName}{(player.isLocal ? " (you)" : "")}"; //Local player in editor already contains player ID in []
+#else
+        return $"[{player.playerId}] {player.displayName}{(player.isLocal ? " (you)" : "")}";
+#endif
+    }
+
     public string[] DebugText
     {
         get
         {
             string[] returnString = new string[]
             {
+                
                 $"Debug of {nameof(BoatController)} called {gameObject.name}",
-                $"Owner of controller = {Networking.GetOwner(gameObject).displayName}",
-                $"Owner of rigidbody = {Networking.GetOwner(linkedRigidbody.gameObject).displayName}",
+                $"Owner of controller = {PlayerText(Networking.GetOwner(gameObject))}",
+                $"Owner of rigidbody = {PlayerText(Networking.GetOwner(linkedRigidbody.gameObject))}",
                 $"Drag (Should be zero): {linkedRigidbody.drag}",
                 $"Angular drag: {linkedRigidbody.angularDrag}",
                 $"Constraints: {linkedRigidbody.constraints}",
@@ -109,10 +119,12 @@ public class BoatController : UdonSharpBehaviour
         }
         set
         {
+            LocalBoatStates oldBoatState = localBoatState;
+
             switch (value)
             {
                 case LocalBoatStates.IdleAsOwner:
-                    switch (localBoatState)
+                    switch (oldBoatState)
                     {
                         case LocalBoatStates.IdleAsOwner:
                             //No change
@@ -120,6 +132,8 @@ public class BoatController : UdonSharpBehaviour
                         case LocalBoatStates.ActiveAsOwner:
                             LocalPhysicsActive = false;
                             PlatformActiveForMovement = false;
+                            syncedOwnershipLocked = false;
+                            RequestSerialization();
                             break;
                         case LocalBoatStates.NetworkControlled:
                             PlatformActiveForMovement = false;
@@ -130,7 +144,7 @@ public class BoatController : UdonSharpBehaviour
                     }
                     break;
                 case LocalBoatStates.ActiveAsOwner:
-                    switch (localBoatState)
+                    switch (oldBoatState)
                     {
                         case LocalBoatStates.IdleAsOwner:
                             LocalPhysicsActive = true;
@@ -147,7 +161,7 @@ public class BoatController : UdonSharpBehaviour
                                 value = LocalBoatStates.NetworkControlled;
                                 break;
                             }
-                            Networking.SetOwner(localPlayer, gameObject);
+                            SetCurrentPlayerAsOwner();
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
                             syncedOwnershipLocked = true;
@@ -158,7 +172,7 @@ public class BoatController : UdonSharpBehaviour
                     }
                     break;
                 case LocalBoatStates.NetworkControlled:
-                    switch (localBoatState)
+                    switch (oldBoatState)
                     {
                         case LocalBoatStates.IdleAsOwner:
                             //Normal condition: Not fix needed, continue to default procedure
@@ -184,6 +198,14 @@ public class BoatController : UdonSharpBehaviour
         }
     }
 
+    public bool ownershipLocked
+    {
+        get
+        {
+            return syncedOwnershipLocked;
+        }
+    }
+
     public Rigidbody LinkedRigidbody
     {
         get
@@ -202,6 +224,11 @@ public class BoatController : UdonSharpBehaviour
 
     public Vector2 SyncedInputs
     {
+        set
+        {
+            syncedInputs = value;
+            RequestSerialization();
+        }
         get
         {
             return syncedInputs;
@@ -347,9 +374,9 @@ public class BoatController : UdonSharpBehaviour
     //Public functions
     public void TryClaimOwnership()
     {
-        if (localBoatState == LocalBoatStates.NetworkControlled)
+        if (localBoatState == LocalBoatStates.NetworkControlled && !ownershipLocked)
         {
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            SetCurrentPlayerAsOwner();
         }
     }
 
@@ -378,11 +405,6 @@ public class BoatController : UdonSharpBehaviour
         rigidBodyTransform.SetPositionAndRotation(worldRespawnPosition, worldRespawnRotation);
 
         StopRigidbody();
-    }
-
-    public void SyncDriveValues(Vector2 inputs)
-    {
-        this.syncedInputs = inputs;
     }
 
     public void LocalPlayerEntered()
@@ -481,6 +503,12 @@ public class BoatController : UdonSharpBehaviour
         PlatformActiveForMovement = syncedPlatformActiveForMovement;
     }
 
+    void SetCurrentPlayerAsOwner()
+    {
+        if(!Networking.IsOwner(gameObject)) Networking.SetOwner(localPlayer, gameObject);
+        if (linkedObjectSync && !Networking.IsOwner(linkedObjectSync.gameObject)) Networking.SetOwner(localPlayer, linkedObjectSync.gameObject);
+    }
+
     public override void OnOwnershipTransferred(VRCPlayerApi player)
     {
         base.OnOwnershipTransferred(player);
@@ -515,7 +543,7 @@ public class BoatController : UdonSharpBehaviour
                     //Handle race condition:
                     if (LocalPlayerHasPriority(player))
                     {
-                        Networking.SetOwner(localPlayer, gameObject); //Reestablish ownership
+                        SetCurrentPlayerAsOwner(); //Reestablish ownership
                     }
                     else
                     {

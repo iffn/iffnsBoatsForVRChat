@@ -43,6 +43,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] Material inactiveButtonMaterial;
     [SerializeField] Material activeRespawnButtonMaterial;
     [SerializeField] Material inactiveRespawnButtonMaterial;
+    [SerializeField] TMPro.TextMeshProUGUI debugText;
 
     //Fixed parameters
     Rigidbody linkedRigidbody;
@@ -65,19 +66,34 @@ public class BoatDriveSystem : UdonSharpBehaviour
             string[] returnString = new string[]
             {
                 $"Debug of {nameof(BoatController)} called {gameObject.name}",
-                $"Owner of controller = {Networking.GetOwner(gameObject).displayName}",
-                $"Owner of rigidbody = {Networking.GetOwner(linkedRigidbody.gameObject).displayName}",
-                $"Drag (Should be zero): {linkedRigidbody.drag}",
-                $"Angular drag: {linkedRigidbody.angularDrag}",
-                $"Constraints: {linkedRigidbody.constraints}",
-                $"IsSleeping: {linkedRigidbody.IsSleeping()}",
-                $"IsKinematic: {linkedRigidbody.isKinematic}",
                 $"{nameof(inputs)}: {inputs}",
+                $"{nameof(localBoatState)}: {localBoatState}",
                 $"{nameof(localBoatState)}: {localBoatState}",
             };
 
             return returnString;
         }
+    }
+
+    void OutputDebugText()
+    {
+        if (!linkedBoatController || !debugText) return;
+
+        string outputText = "";
+
+        foreach (string text in linkedBoatController.DebugText)
+        {
+            outputText += text + "\n";
+        }
+
+        outputText += "\n";
+
+        foreach(string text in DebugText)
+        {
+            outputText += text + "\n";
+        }
+
+        debugText.text = outputText;
     }
 
     public bool CheckAssignments()
@@ -147,7 +163,7 @@ public class BoatDriveSystem : UdonSharpBehaviour
         }
     }
 
-    void HandleControls()
+    void HandleLocalControls()
     {
         //Get input values
         if (inputHelm) inputs.x = inputHelm.CurrentControlValue;
@@ -312,33 +328,34 @@ public class BoatDriveSystem : UdonSharpBehaviour
         return returnValue;
     }
 
-    Vector2 GetRemoteValues()
+    void UpdateRemoteInputs()
     {
-        return linkedBoatController.SyncedInputs;
+        inputs = linkedBoatController.SyncedInputs;
+
+        inputHelm.CurrentControlValue = inputs.x;
+        inputThrottle.CurrentControlValue = inputs.y;
     }
 
     private void Update()
     {
+        OutputDebugText();
+
         switch (localBoatState)
         {
             case LocalBoatStates.IdleAsOwner:
                 break;
             case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
-
-                
-
-                HandleControls();
-
+                HandleLocalControls();
 
                 UpdateContinuousSound();
 
-                linkedBoatController.SyncDriveValues(inputs);
+                linkedBoatController.SyncedInputs = inputs;
 
                 break;
             case LocalBoatStates.NetworkControlled:
-                inputs = GetRemoteValues();
-                HandleControls();
+                
+
                 UpdateContinuousSound();
                 CheckRemoteSound();
                 break;
@@ -408,7 +425,14 @@ public class BoatDriveSystem : UdonSharpBehaviour
             }
             else
             {
-                ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\n[Click to claim]";
+                if (linkedBoatController.ownershipLocked)
+                {
+                    ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\nOwnership locked";
+                }
+                else
+                {
+                    ownershipText.text = $"Current owner:\n{Networking.GetOwner(linkedBoatController.gameObject).displayName}\n[Click to claim]";
+                }
             }
 
             respawnButtonRenderer.sharedMaterial = isOwner ? activeRespawnButtonMaterial : inactiveRespawnButtonMaterial;
