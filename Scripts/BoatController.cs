@@ -98,6 +98,7 @@ public class BoatController : UdonSharpBehaviour
 
     //Runtime parameters
     float nextSerializationTime;
+    bool setupRan = false;
 
     LocalBoatStates localBoatState = LocalBoatStates.IdleAsOwner;
     public LocalBoatStates LocalBoatState
@@ -260,7 +261,6 @@ public class BoatController : UdonSharpBehaviour
             boatCollider.gameObject.SetActive(value);
 
             //Rigidbody
-            
             if (linkedObjectSync) linkedObjectSync.SetKinematic(!value);
             else linkedRigidbody.isKinematic = !value;
 
@@ -278,6 +278,38 @@ public class BoatController : UdonSharpBehaviour
     }
 
     //Internal functions
+    void SetupOnce()
+    {
+        if (setupRan) return;
+        setupRan = true;
+
+        localPlayer = Networking.LocalPlayer;
+        isInVR = localPlayer.IsUserInVR();
+
+        rigidBodyTransform = linkedRigidbody.transform;
+
+        calculationMesh.transform.parent = rigidBodyTransform;
+
+        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody, dragCoefficientsWithDensity);
+
+        linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
+
+        LocalBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.IdleAsOwner : LocalBoatStates.NetworkControlled;
+
+        linkedDriveSystem.Setup(this);
+
+        worldRespawnPosition = linkedRigidbody.transform.position;
+        worldRespawnRotation = linkedRigidbody.transform.rotation;
+
+        /*
+        dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
+        dragCoefficientsWithDensity.y = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.y), 0.0001f, 1000);
+        dragCoefficientsWithDensity.z = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.z), 0.0001f, 1000);
+
+        if (dragCoefficientsWithDensity.x == 0 ) dragCoefficientsWithDensity = Vector3.one;
+        */
+    }
+
     bool LocalPlayerHasPriority(VRCPlayerApi remotePlayer)
     {
         return localPlayer.playerId < remotePlayer.playerId;
@@ -396,31 +428,7 @@ public class BoatController : UdonSharpBehaviour
     //Unity functions
     void Start()
     {
-        localPlayer = Networking.LocalPlayer;
-        isInVR = localPlayer.IsUserInVR();
-
-        rigidBodyTransform = linkedRigidbody.transform;
-
-        calculationMesh.transform.parent = rigidBodyTransform;
-
-        linkedHullCalculator.Setup(calculationMesh, calculationMesh.transform, linkedRigidbody, dragCoefficientsWithDensity);
-
-        linkedObjectSync = rigidBodyTransform.GetComponent<VRCObjectSync>();
-
-        LocalBoatState = Networking.IsOwner(gameObject) ? LocalBoatStates.IdleAsOwner : LocalBoatStates.NetworkControlled;
-
-        linkedDriveSystem.Setup(this);
-
-        worldRespawnPosition = linkedRigidbody.transform.position;
-        worldRespawnRotation = linkedRigidbody.transform.rotation;
-
-        /*
-        dragCoefficientsWithDensity.x = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.x), 0.0001f, 1000);
-        dragCoefficientsWithDensity.y = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.y), 0.0001f, 1000);
-        dragCoefficientsWithDensity.z = Mathf.Clamp(Mathf.Abs(dragCoefficientsWithDensity.z), 0.0001f, 1000);
-
-        if (dragCoefficientsWithDensity.x == 0 ) dragCoefficientsWithDensity = Vector3.one;
-        */
+        SetupOnce();
     }
 
     void Update()
@@ -475,6 +483,8 @@ public class BoatController : UdonSharpBehaviour
 
     public override void OnOwnershipTransferred(VRCPlayerApi player)
     {
+        SetupOnce();
+
         base.OnOwnershipTransferred(player);
 
         if (player.isLocal)

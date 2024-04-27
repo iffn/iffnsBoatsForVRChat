@@ -401,6 +401,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
                     break;
             }
 
+            //linkedBoatController is somehow null here on second player startup
+
             if (isOwner)
             {
                 ownershipText.text = $"Current owner:\nYou";
