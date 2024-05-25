@@ -3,6 +3,7 @@ Overview: https://docs.google.com/document/d/1b8hddijxfvMECmnKvso8eCRZDr9nL9c-74
 
 ## Requirements:
 - NUMovementPlatformSyncModForVRChat https://github.com/iffn/NUMovementPlatformSyncModForVRChat
+- iffnsSmartStationForVRChat https://github.com/iffn/iffnsSmartStationForVRChat
 
 
 ## Current state:
