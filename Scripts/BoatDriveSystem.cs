@@ -1,11 +1,9 @@
 ﻿//UdonCompilerStopper
 using iffnsStuff.iffnsVRCStuff.InteractionController;
-using System.Globalization;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
-using static UnityEngine.Rendering.DebugUI;
 
 
 public class BoatDriveSystem : UdonSharpBehaviour
@@ -28,8 +26,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     [SerializeField] AudioSource runningSound;
     [SerializeField] AudioSource shutdownSound;
 
-    [SerializeField] SingleFloatInteractor inputHelm;
-    [SerializeField] SingleFloatInteractor inputThrottle;
+    [SerializeField] SingleSyncedFloatInteractor inputHelm;
+    [SerializeField] SingleSyncedFloatInteractor inputThrottle;
     [SerializeField] ButtonInteractor respawnButton;
     [SerializeField] ButtonInteractor ownershipButton;
     [SerializeField] ButtonInteractor activationButton;
@@ -216,8 +214,8 @@ public class BoatDriveSystem : UdonSharpBehaviour
     void HandleLocalControls()
     {
         //Get input values
-        if (inputHelm) inputs.x = inputHelm.CurrentControlValue;
-        if (inputThrottle) inputs.y = inputThrottle.CurrentControlValue;
+        if (inputHelm) inputs.x = inputHelm.CurrentSyncedControlValue;
+        if (inputThrottle) inputs.y = inputThrottle.CurrentSyncedControlValue;
 
         /*
         if (!isInVR)
@@ -394,15 +392,6 @@ public class BoatDriveSystem : UdonSharpBehaviour
         }
     }
 
-    void UpdateRemoteInputs()
-    {
-        inputs.x = Mathf.SmoothDamp(inputs.x, linkedBoatController.SyncedInputs.x, ref inputSmoothingVelocity.x, smoothTime);
-        inputs.y = Mathf.SmoothDamp(inputs.y, linkedBoatController.SyncedInputs.y, ref inputSmoothingVelocity.y, smoothTime);
-
-        inputHelm.CurrentControlValue = inputs.x;
-        inputThrottle.CurrentControlValue = inputs.y;
-    }
-
     private void Update()
     {
         OutputDebugText();
@@ -410,17 +399,13 @@ public class BoatDriveSystem : UdonSharpBehaviour
         switch (localBoatState)
         {
             case LocalBoatStates.IdleAsOwner:
-                linkedBoatController.SyncedInputs = inputs;
                 break;
             case LocalBoatStates.ActiveAsOwner:
                 //Get inputs
                 HandleLocalControls();
                 UpdateContinuousSound();
-                linkedBoatController.SyncedInputs = inputs;
                 break;
             case LocalBoatStates.NetworkControlled:
-
-                UpdateRemoteInputs();
                 UpdateContinuousSound();
                 CheckRemoteSound();
                 break;

@@ -20,7 +20,7 @@ public class BoatController : UdonSharpBehaviour
     /*
     Purpose:
     - Manage ownership
-    - Manage interaction beteen boat physics player collider
+    - Manage interaction between boat physics player collider
     - Collider states
     - Platform movement
     - Manage visual effects
@@ -28,7 +28,6 @@ public class BoatController : UdonSharpBehaviour
     
     [UdonSynced] bool syncedPlatformActiveForMovement = false;
     [UdonSynced] bool syncedOwnershipLocked = false;
-    [UdonSynced] Vector2 syncedInputs;
     
     //Unity assignments
     [Header("Behavior parameters")]
@@ -72,7 +71,6 @@ public class BoatController : UdonSharpBehaviour
                 $"IsKinematic: {linkedRigidbody.isKinematic}",
                 $"{nameof(syncedPlatformActiveForMovement)}: {syncedPlatformActiveForMovement}",
                 $"{nameof(syncedOwnershipLocked)}: {syncedOwnershipLocked}",
-                $"{nameof(syncedInputs)}: {syncedInputs}",
                 $"{nameof(localBoatState)}: {localBoatState}",
             };
 
@@ -220,19 +218,6 @@ public class BoatController : UdonSharpBehaviour
         get
         {
             return linkedObjectSync;
-        }
-    }
-
-    public Vector2 SyncedInputs
-    {
-        set
-        {
-            syncedInputs = value;
-            RequestSerialization();
-        }
-        get
-        {
-            return syncedInputs;
         }
     }
 
