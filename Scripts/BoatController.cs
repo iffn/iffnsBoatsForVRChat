@@ -148,7 +148,7 @@ public class BoatController : UdonSharpBehaviour
                         case LocalBoatStates.IdleAsOwner:
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
-                            syncedOwnershipLocked = true;
+                            syncedOwnershipLocked = false;
                             RequestSerialization();
                             break;
                         case LocalBoatStates.ActiveAsOwner:
@@ -163,7 +163,7 @@ public class BoatController : UdonSharpBehaviour
                             SetCurrentPlayerAsOwner();
                             LocalPhysicsActive = true;
                             PlatformActiveForMovement = true;
-                            syncedOwnershipLocked = true;
+                            syncedOwnershipLocked = false;
                             RequestSerialization();
                             break;
                         default:
@@ -174,11 +174,8 @@ public class BoatController : UdonSharpBehaviour
                     switch (oldBoatState)
                     {
                         case LocalBoatStates.IdleAsOwner:
-                            //Normal condition: Not fix needed, continue to default procedure
                             break;
                         case LocalBoatStates.ActiveAsOwner:
-                            //Handle failed race condition:
-                            //ToDo: Kick out
                             PlatformActiveForMovement = syncedPlatformActiveForMovement;
                             LocalPhysicsActive = false;
                             break;
@@ -527,15 +524,7 @@ public class BoatController : UdonSharpBehaviour
                     LocalBoatState = LocalBoatStates.NetworkControlled;
                     break;
                 case LocalBoatStates.ActiveAsOwner:
-                    //Handle race condition:
-                    if (LocalPlayerHasPriority(player))
-                    {
-                        SetCurrentPlayerAsOwner(); //Reestablish ownership
-                    }
-                    else
-                    {
-                        LocalBoatState = LocalBoatStates.NetworkControlled; //Handle corner case in state
-                    }
+                    LocalBoatState = LocalBoatStates.NetworkControlled;
                     break;
                 case LocalBoatStates.NetworkControlled:
                     //Ignore switch between remote players
