@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: TugController
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 62e22d37cee5c53459b92e74224a7e56,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 18329e8ba70002e4f9d6c59632b17585,
     type: 2}
   udonAssembly: 
   assemblyError: 
